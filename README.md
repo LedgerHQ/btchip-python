@@ -37,9 +37,9 @@ The following creation mode is recommended, in order to avoid bankruptcy if the 
 
   * On a trusted computer, generate random components using the generate random API of the dongle
   * Install a key containing this component
-  * GPG encrypt this component to yourself, and keep it away
+  * GPG encrypt this component to yourself, and store it where you won't lose it
 
-If the dongle is stolen, everyone is able to sign using your private keys and steal your coins :(
+However if the dongle is stolen, everyone is able to sign using your private keys (supposing they got their encrypted blobs too) and steal your coins :(
 
 Creating a context key for paranoid people
 -------------------------------------------
@@ -72,9 +72,17 @@ Detach the shape starting from the center, then gently bend downward the small e
 
 Due to firmware size limitations and heavy recycling, it was not possible to include PCSC support in this firmware revision. 
 
-  * The signature time is too long
+  * The signature time is too long 
 
-It can and will likely be improved in the future, and we can perform firmware updates.
+It can and will likely be improved in the future, and the dongle supports firmware updates.
+
+  * How secure is it ? 
+
+The chip is a smartcard certified platform (for the time being we'll let the potential attackers name it to avoid spoiling the game :p) and the software was designed by people who usually know what they're doing, so we don't think you'll be disappointed. However feel free to attack it. 
+
+  * When will it go for sale ? 
+
+The final version should be available early 2013 and cost around 1 BTC with shipping included
 
 License
 -------
