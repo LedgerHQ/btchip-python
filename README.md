@@ -50,6 +50,12 @@ Personalization
 
 The sample BTChip cards are initialized with a Secure Channel key in keyset 0x01, initialized to the default test value 404142434445464748494A4B4C4D4E4F for all components 
 
+Reference transactions
+----------------------
+
+   * http://blockexplorer.com/tx/63edf213d775ba3d3999afcc315819ffa08143b3aeb6b2e490a18553b2aa96b4#o0 
+   * http://blockexplorer.com/tx/b335de5ac4390ea0f82ce07c2ae148154d199de8a5c3d3de3235f2294df1fdb2#o0
+
 License
 -------
 
