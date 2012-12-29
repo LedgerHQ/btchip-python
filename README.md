@@ -3,8 +3,6 @@ btchip-python
 
 Python setup and samples for BTChip - how to start playing with the samples distributed @ 29c3 - for more details, drop a line to contact@btchip.com
 
-.. contents::
-
 Description
 -----------
 
@@ -24,9 +22,9 @@ Getting started
   * Try a few samples
   * Modify your favorite client to support it
 
-Linux users : you'll need to add a new udev rule to access the dongle from a non root account::
+Linux users : you'll need to add a new udev rule to access the dongle from a non root account
 
-  SUBSYSTEMS=="usb", ATTRS{idVendor}=="2581", ATTRS{idProduct}=="1807", MODE="0660", GROUP="yourgroup"
+          SUBSYSTEMS=="usb", ATTRS{idVendor}=="2581", ATTRS{idProduct}=="1807", MODE="0660", GROUP="yourgroup"
 
 Creating a context key for non paranoid people
 ----------------------------------------------
