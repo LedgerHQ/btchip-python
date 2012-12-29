@@ -9,7 +9,7 @@ Description
 Marketing version : BTChip let you secure your bitcoin private keys and use bitcoins safely in hostile environments (public PC, 
  Windows PC you forgot to update 3 years ago ...)
 
-Technical version : BTChip is a smartcard chip performing keypair generation, signing and verification over the secp256k1 elliptic curve. Communication with the host is done over USB HID APIs. No asymmetric keys are kept on the dongle - the private keys are sent back encrypted by a Triple DES context key.
+Technical version : BTChip is a smartcard chip performing keypair generation, signing and verification over the secp256k1 elliptic curve. Communication with the host is done over USB HID APIs. No asymmetric keys are kept on the dongle - the private keys are sent back and forth encrypted by a Triple DES context key.
 
 A healthy amount of ISO 7816-4 (http://www.cardwerk.com/smartcards/smartcard_standard_ISO7816-4.aspx), GlobalPlatform Secure Channel (http://www.globalplatform.org) is referenced by the samples. If confused by the samples, it is recommended to check other projects for inspiration, such as GPShell - http://sourceforge.net/projects/globalplatform/files/
 
