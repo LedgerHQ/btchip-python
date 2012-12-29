@@ -16,11 +16,15 @@ A healthy amount of ISO 7816-4 (http://www.cardwerk.com/smartcards/smartcard_sta
 Getting started 
 ---------------
 
-  * Check out the repository
+  * Check out the repository.
   * Compile cython-hidapi
   * Create a symmetric key to encrypt the private keys (context key)
   * Try a few samples
   * Modify your favorite client to support it
+
+You can pull the repository dependency to cython-hidapi with
+
+          git submodule update --init
 
 Linux users : you'll need to add a new udev rule to access the dongle from a non root account
 
@@ -53,8 +57,24 @@ The sample BTChip cards are initialized with a Secure Channel key in keyset 0x01
 Reference transactions
 ----------------------
 
-   * http://blockexplorer.com/tx/63edf213d775ba3d3999afcc315819ffa08143b3aeb6b2e490a18553b2aa96b4#o0 
-   * http://blockexplorer.com/tx/b335de5ac4390ea0f82ce07c2ae148154d199de8a5c3d3de3235f2294df1fdb2#o0
+   * http://blockexplorer.com/tx/63edf213d775ba3d3999afcc315819ffa08143b3aeb6b2e490a18553b2aa96b4 
+   * http://blockexplorer.com/tx/b335de5ac4390ea0f82ce07c2ae148154d199de8a5c3d3de3235f2294df1fdb2
+   * http://blockexplorer.com/tx/68956f3d5f460b29a3ccb2ea721c704ad5e62b9832e5424d3f0aab4d32544b12
+
+FAQ
+---
+
+  * How do I use it ?
+
+Detach the shape starting from the center, then gently bend downward the small element labelled "clip" until it clips in place. This will make the chip large enough to fit a USB port, which is conveniently where it should go next.
+
+  * Why not PCSC ? It's a smartcard after all 
+
+Due to firmware size limitations and heavy recycling, it was not possible to include PCSC support in this firmware revision. 
+
+  * The signature time is too long
+
+It can and will likely be improved in the future, and we can perform firmware updates.
 
 License
 -------
