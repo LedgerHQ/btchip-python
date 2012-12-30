@@ -23,6 +23,12 @@ Getting started
   * Compile/Install cython-hidapi
   * Create a symmetric key to encrypt the private keys (context key)
   * Try a few samples
+    * sample-create-keyset-test-signature.py : create a test keyset and test the generate / sign / verify features
+    * sample-create-keyset-with-pin-test-signature.py : create a test keyset protected by a PIN and test the generate / sign / verify features
+    * sample-test-signature.py : test the generate / sign / verify features for the test context key created previously
+    * sample-test-signature-with-pin.py : test the generate / sign / verify features for the test context key created previously and protected by a PIN.
+    * sample-interoperability.py : show how to decrypt a private key knowing the context key and how to import an external private key
+  * Create at least one symmetric key to encrypt the private keys (context key)
   * Modify your favorite client to support it. You can also find a sample integration into bitcoinj here http://code.google.com/r/contact-bitcoinj-btchip/ - on the following revision http://code.google.com/r/contact-bitcoinj-btchip/source/detail?r=228c010d5ad872cde58d75221bed689225de3afb
 
 You can pull the repository dependency to cython-hidapi and hidapi with
