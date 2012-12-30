@@ -257,6 +257,12 @@ class BTChip():
         out.append(toHex(res[1 + publicKeySize + 1:]))
         return out
 
+    def importPrivateKey(self, contextKeysetVersion, privateComponent):
+        '''Import an existing private key. Returns the encrypted private key'''
+        apdu = "e0208000" + '%02x' % (len(privateComponent) / 2 + 2) + '%02x' % contextKeysetVersion + "00"
+        apdu = apdu + privateComponent
+        return toHex(self.dongle.exchangeApdu(apdu))
+
     def sign(self, contextKeysetVersion, privateKey, hashToSign):
         '''Sign a hash using the provided encrypted private key and associated encryption key context pointing to a key with BTCHIP_PUT_KEY_USAGE_BITCOIN_PRIVATE_KEY_CONTEXT usage'''
         apdu = "e0400000" + '%02x' % (len(privateKey) / 2 + len(hashToSign) / 2 + 2)
