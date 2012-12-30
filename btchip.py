@@ -294,9 +294,9 @@ def getFirstDongle():
     # in the meantime use a workaround to avoid yet another fork
     counter = 0
     for device in hid.enumerate(0x2581, 0x1807):
-       if device['usage_page'] == 0: # Linux
+       if device['usage_page'] == 0: # Linux w. libusb
           counter = counter + 1
-       if counter == 2 or device['usage_page'] == 65440: # OS X
+       if counter == 2 or device['usage_page'] == 65440: # others 
 	  path = device['path']
           device = hid.device()
           device.open_path(path)
