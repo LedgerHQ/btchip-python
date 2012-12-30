@@ -29,7 +29,7 @@ You can pull the repository dependency to cython-hidapi and hidapi with
 
           git submodule update --init --recursive
 
-Linux users : you'll need to add a new udev rule to access the dongle from a non root account
+Linux users : you'll need to add a new udev rule to access the dongle from a non root account, described below. Also make sure to use the libusb backend for hidapi
 
           SUBSYSTEMS=="usb", ATTRS{idVendor}=="2581", ATTRS{idProduct}=="1807", MODE="0660", GROUP="yourgroup"
 
