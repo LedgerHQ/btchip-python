@@ -87,6 +87,6 @@ The final version should be available early 2013 and cost around 1 BTC with ship
 License
 -------
 
-  GPL v2 for all code submitted
+  GPL v2 for all standalone code submitted - project license for integrated code
 
 
