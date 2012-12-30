@@ -16,9 +16,11 @@ A healthy amount of ISO 7816-4 (http://www.cardwerk.com/smartcards/smartcard_sta
 Getting started 
 ---------------
 
+  * Verify that the following dependencies are installed
+    * Cython http://cython.org
+    * PyCrypto https://www.dlitz.net/software/pycrypto
   * Check out the repository.
-  * Compile cython-hidapi
-  * Install PyCrypto from https://www.dlitz.net/software/pycrypto/ or your favorite package manager
+  * Compile/Install cython-hidapi
   * Create a symmetric key to encrypt the private keys (context key)
   * Try a few samples
   * Modify your favorite client to support it. You can also find a sample integration into bitcoinj here http://code.google.com/r/contact-bitcoinj-btchip/ - on the following revision http://code.google.com/r/contact-bitcoinj-btchip/source/detail?r=228c010d5ad872cde58d75221bed689225de3afb
@@ -75,7 +77,7 @@ Due to firmware size limitations and heavy recycling, it was not possible to inc
 
   * The signature time is too long 
 
-It can and will likely be improved in the future, and the dongle supports firmware updates.
+It can and will be improved in the future, and the dongle supports firmware updates.
 
   * How secure is it ? 
 
