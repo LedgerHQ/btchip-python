@@ -20,7 +20,7 @@ Getting started
   * Compile cython-hidapi
   * Create a symmetric key to encrypt the private keys (context key)
   * Try a few samples
-  * Modify your favorite client to support it
+  * Modify your favorite client to support it. You can also find a sample integration into bitcoinj here http://code.google.com/r/contact-bitcoinj-btchip/ - on the following revision http://code.google.com/r/contact-bitcoinj-btchip/source/detail?r=228c010d5ad872cde58d75221bed689225de3afb
 
 You can pull the repository dependency to cython-hidapi with
 
