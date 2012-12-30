@@ -290,9 +290,13 @@ def toHex(data):
 
 def getFirstDongle():
     '''Convenience method to return the first available dongle'''
+    # Fugly. Should get interface number 1, but this field is not exported in the default cython-hidapi releases
+    # in the meantime the different implementations seem to enumerate the interfaces in the right order
+    counter = 0
     for device in hid.enumerate(0x2581, 0x1807):
-       path = device['path']
-       if path[len(path) - 1] == "1":        
+       counter = counter + 1
+       if counter == 2:        
+	  path = device['path']
           device = hid.device()
           device.open_path(path)
           dongle = Dongle(device)
