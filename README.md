@@ -1,7 +1,7 @@
 btchip-python
 =============
 
-Python setup and samples for BTChip - how to start playing with the samples distributed @ 29c3 - for more details, drop a line to contact@btchip.com
+Python setup and samples for BTChip - how to start playing with the samples distributed @ 29c3 - for more details, check http://www.btchip.com / drop a line to contact@btchip.com
 
 Description
 -----------
