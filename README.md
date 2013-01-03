@@ -62,9 +62,9 @@ The sample BTChip cards are initialized with a Secure Channel key in keyset 0x01
 Reference transactions
 ----------------------
 
-   * http://blockexplorer.com/tx/63edf213d775ba3d3999afcc315819ffa08143b3aeb6b2e490a18553b2aa96b4 
-   * http://blockexplorer.com/tx/b335de5ac4390ea0f82ce07c2ae148154d199de8a5c3d3de3235f2294df1fdb2
-   * http://blockexplorer.com/tx/68956f3d5f460b29a3ccb2ea721c704ad5e62b9832e5424d3f0aab4d32544b12
+   * http://blockchain.info/tx/63edf213d775ba3d3999afcc315819ffa08143b3aeb6b2e490a18553b2aa96b4 
+   * http://blockchain.info/tx/b335de5ac4390ea0f82ce07c2ae148154d199de8a5c3d3de3235f2294df1fdb2
+   * http://blockchain.info/tx/68956f3d5f460b29a3ccb2ea721c704ad5e62b9832e5424d3f0aab4d32544b12
 
 FAQ
 ---
