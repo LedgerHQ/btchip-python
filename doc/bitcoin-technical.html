@@ -738,7 +738,7 @@ asciidoc.install(2);
 <h1>BTChip : Technical Specification</h1>
 <span id="author">BTChip</span><br />
 <span id="email"><tt>&lt;<a href="mailto:contact@btchip.com">contact@btchip.com</a>&gt;</tt></span><br />
-<span id="revdate">firmware version 1.4.1</span>
+<span id="revdate">firmware version 1.4.2</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -751,14 +751,21 @@ asciidoc.install(2);
 <div class="ulist"><ul>
 <li>
 <p>
-[bug] Private key are now paired to their curve parameters (cheers Jix :p)
+[enh] ECC operations speed-up
 </p>
 </li>
 <li>
 <p>
-[enh] ECC operations speed-up
+[bug] Private key are now paired to their curve parameters (cheers Jix :p)
 </p>
 </li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_changelog_from_1_4_1">2. Changelog from 1.4.1</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
 <li>
 <p>
 [enh] New security rules &amp; operation modes
@@ -768,13 +775,13 @@ asciidoc.install(2);
 </div>
 </div>
 <div class="sect1">
-<h2 id="_about">2. About</h2>
+<h2 id="_about">3. About</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>BTChip is a USB smartcard/dongle dedicated to secure bitcoin transactions. It performs all sensitive cryptographic operations related to a bitcoin transaction (key generation &amp; signature) onboard, and helps protect against malware in an untrusted environment by controlling the signed data.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_operation_modes">3. Operation modes</h2>
+<h2 id="_operation_modes">4. Operation modes</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Operation modes define which operations are allowed given the security environment the dongle is operating in.</p></div>
 <div class="paragraph"><p>Two operation modes are defined, from the less restrictive to the more restrictive :</p></div>
@@ -793,13 +800,13 @@ Untrusted : This mode is the default mode when using standard operation paramete
 <div class="paragraph"><p>The operation mode is persistent.</p></div>
 <div class="paragraph"><p>The user is always authorized to move from an operation mode to a more restrictive operation mode. However an authentication is required to move to a less restrictive operation mode.</p></div>
 <div class="sect2">
-<h3 id="_trusted_operation_mode">3.1. Trusted operation mode</h3>
+<h3 id="_trusted_operation_mode">4.1. Trusted operation mode</h3>
 <div class="paragraph"><p>All dongle functionalities are enabled in trusted mode. Arbitrary data can be signed by the dongle.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_operation_mode">3.2. Untrusted operation mode</h3>
+<h3 id="_untrusted_operation_mode">4.2. Untrusted operation mode</h3>
 <div class="sect3">
-<h4 id="_overview">3.2.1. Overview</h4>
+<h4 id="_overview">4.2.1. Overview</h4>
 <div class="paragraph"><p>Only point-to-point outputs (i.e. the standard script) sent to authorized bitcoin addresses can be signed automatically. Complex scripts can be signed with a specific per script cryptographic authorization.</p></div>
 <div class="paragraph"><p>The standard script is coded as</p></div>
 <div class="listingblock">
@@ -809,12 +816,12 @@ Untrusted : This mode is the default mode when using standard operation paramete
 <div class="paragraph"><p>An authorized bitcoin address is a regular bitcoin address authorized by the user, then encrypted.</p></div>
 <div class="paragraph"><p>Transaction amounts are not secured on a fine grained level per transaction, other than supporting a pre registered maximum value - it is admitted that setting smaller random transaction amounts for a malware has a limited interest, other than making miners happier or just messing around, which is usually not a strong motive for nowadays malware industry.</p></div>
 <div class="paragraph"><p>In a similar way, the input sequence number and transaction lock time are not secured on a fine grained level either. It is admitted than point-to-point payment is more common than other contracts nowadays.</p></div>
-<div class="paragraph"><p>A cryptographic authorization can be computed offline to sign an arbitrary script, based on the hash of the script that is to be signed, and/or provide a transaction amount limit greater than the generic one. Authorizations are protected against replay through a sequence counter - once an authorization has been accepted, the next authorization must be presented with a sequence counter greater than the previous one. Once the sequence counter reaches its maximum value 0xffffffff, it is reset to 0.</p></div>
+<div class="paragraph"><p>A cryptographic authorization can be computed offline to sign an arbitrary script, based on the hash of the script that is to be signed, and/or provide a transaction amount limit greater than the generic one. Authorizations are protected against replay through a sequence counter - once an authorization has been accepted, the next authorization must be presented with a sequence counter greater than the previous one. Once the sequence counter reaches its maximum value 0xffffffff, it is reset to 1.</p></div>
 <div class="paragraph"><p>In order to authorize a public key address on the fly, a challenge/response mechanism is set up when the dongle is received and personalized by the user.</p></div>
 <div class="paragraph"><p>Challenges are defined by the user using a minimalistic script language called the Challenge engine - given random parameters and a user provided description which should identify in a unique way what the script is doing, the user validates elements of the address and returns a response as a set of numbers from 0 to 9.</p></div>
 <div class="paragraph"><p>Challenges keep the user protected because the script logic is unknown, providing it is well customized with a description that can not be trivially parsed by the malware, and responses are difficult to tell apart.</p></div>
 <div class="paragraph"><p>As an additional protection from man in the middle and remote human attacks, a minimum time and maximum time in seconds can be defined for all challenge scripts. If a response is received before the minimum time, or after the maximum time, the challenge round is always failed. The reponse timer starts running when the challenge is sent.</p></div>
-<div class="paragraph"><p>When a given number of challenge rounds are performed successfuly, the authorized address is returned by the dongle. If the response is not correct, the dongle is locked-up until removed from the USB port and reinserted. After a given number of wrong responses, the import functionality is disabled until reenabled in a trusted environment</p></div>
+<div class="paragraph"><p>When a given number of challenge rounds are performed successfuly, the authorized address is returned by the dongle. After a configurable number of wrong responses, the dongle is locked-up until removed from the USB port and reinserted, and the import functionality is disabled until reenabled in a trusted environment</p></div>
 <div class="paragraph"><p>Other dongle functionalities are disabled in untrusted mode :</p></div>
 <div class="ulist"><ul>
 <li>
@@ -835,7 +842,7 @@ All bitcoin APDUs are forbidden following a GET SERIAL NUMBER or an INITIALIZE U
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_challenge_engine">3.2.2. Challenge engine</h4>
+<h4 id="_challenge_engine">4.2.2. Challenge engine</h4>
 <div class="paragraph" id="challengeengine"><p>The challenge engine defines opcodes operating on 100 random input parameters P. Each parameter is a number between 2 and the length of the address being validated.</p></div>
 <div class="paragraph"><p>Opcodes are chained together to create a sequence of 0-9 numeric responses that the user must submit. Most opcodes are associated to a parameter X, which defines an offset into the address as P[X]</p></div>
 <div class="paragraph"><p>The following opcodes are available :</p></div>
@@ -906,12 +913,13 @@ An even number
 </li>
 </ul></div>
 <div class="paragraph"><p>An input that does not validate as TRUE is FALSE</p></div>
+<div class="paragraph"><p>Each script can use at most 20 opcodes, not including SKIP opcodes.</p></div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_additional_key_types">4. Additional key types</h2>
+<h2 id="_additional_key_types">5. Additional key types</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The following key types are added</p></div>
 <div class="ulist"><ul>
@@ -946,10 +954,10 @@ An even number
 </div>
 </div>
 <div class="sect1">
-<h2 id="_additional_files">5. Additional files</h2>
+<h2 id="_additional_files">6. Additional files</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_elliptic_curve_parameters">5.1. Elliptic curve parameters</h3>
+<h3 id="_elliptic_curve_parameters">6.1. Elliptic curve parameters</h3>
 <div class="paragraph"><p>Elliptic curve parameters are stored in transparent files in 3F00/CE15 DF, using the following format</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1049,8 +1057,8 @@ DELETE       0xFE (administrative keyset)
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_operation_parameters">5.2. Operation parameters</h3>
-<div class="paragraph"><p>Operation parameters are defined in the 0xb1b1 file located in 0x3f00. They define the basic functionalities of the dongle</p></div>
+<h3 id="_operation_parameters">6.2. Operation parameters</h3>
+<div class="paragraph"><p>Operation parameters are defined in the 0xb101 file located in 0x3f00. They define the basic functionalities of the dongle</p></div>
 <div class="tableblock">
 <table rules="all"
 width="80%"
@@ -1073,27 +1081,29 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">2-3</p></td>
-<td align="left" valign="top"><p class="table">File id in the MF containing the challenge engine data (big endian)</p>
-<p class="table">                       Initially set to 0xffff so addresses authorization is disabled</p></td>
 <td align="left" valign="top"><p class="table">2</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">4</p></td>
 <td align="left" valign="top"><p class="table">Number of challenge rounds in authorized address import.
                        If set (different from 0x00), cannot be lower than 0x02.</p>
 <p class="table">                       Initially set to 0x04</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">5</p></td>
+<td align="left" valign="top"><p class="table">3</p></td>
 <td align="left" valign="top"><p class="table">Maximum number of consecutive wrong challenge responses
-                       before disabling authorized address import</p>
+                       before disabling authorized address import. Import
+                       functionality is disabled if set to 0x00</p>
 <p class="table">                       Initially set to 0x03</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">6-9</p></td>
+<td align="left" valign="top"><p class="table">4-7</p></td>
+<td align="left" valign="top"><p class="table">Current specific authorization counter (little endian).
+                       Counter validation is disabled if set to 0x00</p>
+<p class="table">                       Initially set to 0x01</p></td>
+<td align="left" valign="top"><p class="table">4</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">8-11</p></td>
 <td align="left" valign="top"><p class="table">Restriction ack returned by the dongle when
                        switching to a more restrictive mode</p>
 <p class="table">                       Initially set to RTFM</p></td>
@@ -1122,7 +1132,7 @@ DELETE       0xFE (administration keyset)
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_transaction_control">5.3. Transaction control</h3>
+<h3 id="_transaction_control">6.3. Transaction control</h3>
 <div class="paragraph"><p>Transaction control parameters are stored in transparent files in 3F00/0D11 DF, and are used to set generic rules for controlling transactions, using the following format</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1150,12 +1160,12 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">9-12</p></td>
-<td align="left" valign="top"><p class="table">Minimum sequence index, little endian</p></td>
+<td align="left" valign="top"><p class="table">Minimum sequence index (apply to all inputs), little endian</p></td>
 <td align="left" valign="top"><p class="table">4</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">13-16</p></td>
-<td align="left" valign="top"><p class="table">Maximum sequence index, little endian</p></td>
+<td align="left" valign="top"><p class="table">Maximum sequence index (apply to all inputs), little endian</p></td>
 <td align="left" valign="top"><p class="table">4</p></td>
 </tr>
 <tr>
@@ -1234,8 +1244,8 @@ DELETE       0xFE (administrative keyset)
 <div class="paragraph"><p>The maximum amount specified in a transaction control can be overriden for a specific output by providing a Special Output authorization structure when hashing the output.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_challenge_engine_data">5.4. Challenge engine data</h3>
-<div class="paragraph"><p>Challenge engine data is defined in transparent files in the MF</p></div>
+<h3 id="_challenge_engine_data">6.4. Challenge engine data</h3>
+<div class="paragraph"><p>Challenge engine data are stored in transparent files in 3F00/B1CA DF</p></div>
 <div class="tableblock">
 <table rules="all"
 width="80%"
@@ -1292,7 +1302,7 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"></p></td>
-<td align="left" valign="top"><p class="table">Length of the 1st challenge script</p></td>
+<td align="left" valign="top"><p class="table">Length of the 1st challenge script (max 100 bytes)</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
@@ -1377,23 +1387,23 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
-<div class="paragraph"><p>Challenge engine files permissions are set by the user. They must of course never be world readable or updateable.</p></div>
+<div class="paragraph"><p>Challenge engine files permissions are set by the user. They must of course never be world readable or updateable. Read access conditions are ignored during signature operations.</p></div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_trusted_and_untrusted_operation_mode_apdus">6. Trusted and untrusted operation mode APDUs</h2>
+<h2 id="_trusted_and_untrusted_operation_mode_apdus">7. Trusted and untrusted operation mode APDUs</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_set_operation_mode">6.1. SET OPERATION MODE</h3>
+<h3 id="_set_operation_mode">7.1. SET OPERATION MODE</h3>
 <div class="sect3">
-<h4 id="_description">6.1.1. Description</h4>
+<h4 id="_description">7.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to set the operation mode of the dongle.</p></div>
 <div class="paragraph"><p>Going to a more restrictive operation mode is always authorized. The restriction ack defined in the operation parameters will be sent back, as a way to check that the command has not been intercepted when operating on a new untrusted platform.</p></div>
 <div class="paragraph"><p>If going to a less restrictive operation mode, the user shall be authenticated by the GlobalPlatform user key 0x10.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding">6.1.2. Coding</h4>
+<h4 id="_coding">7.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1530,16 +1540,16 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_generate_keypair_or_import_private_key">6.2. GENERATE KEYPAIR OR IMPORT PRIVATE KEY</h3>
+<h3 id="_generate_keypair_or_import_private_key">7.2. GENERATE KEYPAIR OR IMPORT PRIVATE KEY</h3>
 <div class="sect3">
-<h4 id="_description_2">6.2.1. Description</h4>
+<h4 id="_description_2">7.2.1. Description</h4>
 <div class="paragraph"><p>This command is used to generate a keypair using the given curve parameters or import a given private key.</p></div>
 <div class="paragraph"><p>The file containing the curve parameter shall be selected before calling this command when generating a keypair.</p></div>
 <div class="paragraph"><p>The private part of the keypair will be encrypted by the Private key encryption key version passed as input parameter.
 This key must be accessible when the function is called</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_2">6.2.2. Coding</h4>
+<h4 id="_coding_2">7.2.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1601,12 +1611,17 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">3</p></td>
+<td align="left" valign="top"><p class="table">3-4</p></td>
+<td align="left" valign="top"><p class="table">File ID of the curve to use to generate this key</p></td>
+<td align="left" valign="top"><p class="table">2</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">5</p></td>
 <td align="left" valign="top"><p class="table">If requesting an Authorized Address, Authorized Address Encryption keyset version to use</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">4</p></td>
+<td align="left" valign="top"><p class="table">6</p></td>
 <td align="left" valign="top"><p class="table">if requesting an Authorized Address, Bitcoin address version</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
@@ -1640,7 +1655,12 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">3</p></td>
+<td align="left" valign="top"><p class="table">3-4</p></td>
+<td align="left" valign="top"><p class="table">File ID of the curve to use to generate this key</p></td>
+<td align="left" valign="top"><p class="table">2</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">5</p></td>
 <td align="left" valign="top"><p class="table">private key to encode</p></td>
 <td align="left" valign="top"><p class="table"></p></td>
 </tr>
@@ -1772,9 +1792,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authorize_address">6.3. AUTHORIZE ADDRESS</h3>
+<h3 id="_authorize_address">7.3. AUTHORIZE ADDRESS</h3>
 <div class="sect3">
-<h4 id="_description_3">6.3.1. Description</h4>
+<h4 id="_description_3">7.3.1. Description</h4>
 <div class="paragraph"><p>This command is used to encode an address authorization.</p></div>
 <div class="paragraph"><p>The address is an hash160 (ripemd160 of a sha256) of an ECDSA public key, encoded using base58.</p></div>
 <div class="paragraph"><p>The authorized address will be encrypted by the Authorized address encryption version passed as input parameter.</p></div>
@@ -1782,7 +1802,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p>When running in untrusted mode, a challenge round might be required before authorizing the address. In this case, specific output data will be sent to describe the challenge, which should be answered to obtain the authorized address.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_3">6.3.2. Coding</h4>
+<h4 id="_coding_3">7.3.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1837,14 +1857,20 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">2</p></td>
+<td align="left" valign="top"><p class="table">4</p></td>
 <td align="left" valign="top"><p class="table">Base58 encoded address size</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">3-</p></td>
+<td align="left" valign="top"><p class="table">5-</p></td>
 <td align="left" valign="top"><p class="table">Base58 encoded address to authorize</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"></p></td>
+<td align="left" valign="top"><p class="table">File ID containing the challenge engine data to use
+               (not used if operating in secure mode)</p></td>
+<td align="left" valign="top"><p class="table">2</p></td>
 </tr>
 </tbody>
 </table>
@@ -2008,19 +2034,19 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_trusted_operation_mode_apdus">7. Trusted operation mode APDUs</h2>
+<h2 id="_trusted_operation_mode_apdus">8. Trusted operation mode APDUs</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_ecdsa_sign_verify_immediate">7.1. ECDSA SIGN/VERIFY IMMEDIATE</h3>
+<h3 id="_ecdsa_sign_verify_immediate">8.1. ECDSA SIGN/VERIFY IMMEDIATE</h3>
 <div class="sect3">
-<h4 id="_description_4">7.1.1. Description</h4>
+<h4 id="_description_4">8.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to sign a given hash using a private key or verify a given signature using a public key</p></div>
 <div class="paragraph"><p>The private key shall be encrypted by the Private key encryption key version passed as input parameter.
 This key must be accessible when the function is called</p></div>
 <div class="paragraph"><p>If a signature is required in untrusted mode, this command will exit with status word 0x6982</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_4">7.1.2. Coding</h4>
+<h4 id="_coding_4">8.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2219,17 +2245,17 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_untrusted_operation_mode_apdus">8. Untrusted operation mode APDUs</h2>
+<h2 id="_untrusted_operation_mode_apdus">9. Untrusted operation mode APDUs</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_untrusted_hash_transaction">8.1. UNTRUSTED HASH TRANSACTION</h3>
+<h3 id="_untrusted_hash_transaction">9.1. UNTRUSTED HASH TRANSACTION</h3>
 <div class="sect3">
-<h4 id="_description_5">8.1.1. Description</h4>
+<h4 id="_description_5">9.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for a new transaction, controlled by the given transaction control file.</p></div>
 <div class="paragraph"><p>The newly returned hash component will be encrypted by the Secure hash encryption key. This key must be accessible when the function is called.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_5">8.1.2. Coding</h4>
+<h4 id="_coding_5">9.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2372,12 +2398,19 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_input">8.2. UNTRUSTED HASH INPUT</h3>
+<h3 id="_untrusted_hash_input">9.2. UNTRUSTED HASH INPUT</h3>
 <div class="sect3">
-<h4 id="_description_6">8.2.1. Description</h4>
+<h4 id="_description_6">9.2.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for a new transaction input.</p></div>
+<div class="paragraph"><p>Each provided input is supposed to be prepared for the signature to perform - only the currently indexed input
+should have a non null connected output script.</p></div>
 <div class="paragraph"><p>The data provided by the host will be checked against the following structure. Field of the structure cannot be split over different messages unless specific otherwise :</p></div>
 <div class="ulist"><ul>
+<li>
+<p>
+Varint number of inputs, 64 bits varints being rejected
+</p>
+</li>
 <li>
 <p>
 32 bytes arbitrary data (outpoint hash)
@@ -2400,19 +2433,14 @@ L bytes arbitrary data (connected output script). This field can be split over d
 </li>
 <li>
 <p>
-4 bytes sequence. This value will be enforced by the transaction control file in use for this transaction.
-</p>
-</li>
-<li>
-<p>
-Varint number of outputs, 64 bits varints being rejected
+4 bytes sequence. This value will be enforced by the transaction control file in use for this transaction
 </p>
 </li>
 </ul></div>
 <div class="paragraph"><p>The hash component will be decrypted/encrypted by the Secure hash encryption key. This key must be accessible when the function is called.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_6">8.2.2. Coding</h4>
+<h4 id="_coding_6">9.2.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2559,9 +2587,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_direct_output">8.3. UNTRUSTED HASH DIRECT OUTPUT</h3>
+<h3 id="_untrusted_hash_direct_output">9.3. UNTRUSTED HASH DIRECT OUTPUT</h3>
 <div class="sect3">
-<h4 id="_description_7">8.3.1. Description</h4>
+<h4 id="_description_7">9.3.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for a transaction output attached to an input.</p></div>
 <div class="paragraph"><p>This command is rejected if all inputs advertised at the beginning of the transaction have not been processed first.</p></div>
 <div class="paragraph"><p>The generated script will be the standard script coded as below given the Authorized address.</p></div>
@@ -2573,7 +2601,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p>The hash component will be decrypted/encrypted by the Secure hash encryption key. This key must be accessible when the function is called.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_7">8.3.2. Coding</h4>
+<h4 id="_coding_7">9.3.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2736,9 +2764,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_complex_output">8.4. UNTRUSTED HASH COMPLEX OUTPUT</h3>
+<h3 id="_untrusted_hash_complex_output">9.4. UNTRUSTED HASH COMPLEX OUTPUT</h3>
 <div class="sect3">
-<h4 id="_description_8">8.4.1. Description</h4>
+<h4 id="_description_8">9.4.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for a transaction output with a non standard script attached to an input.</p></div>
 <div class="paragraph"><p>This command is rejected if all inputs advertised at the beginning of the transaction have not been processed first.</p></div>
 <div class="paragraph"><p>The data provided by the host will be checked against the following structure. Field of the structure cannot be split over different messages unless specific otherwise :</p></div>
@@ -2762,7 +2790,7 @@ L bytes arbitrary data (output script). This field can be split over different m
 <div class="paragraph"><p>The hash component will be decrypted/encrypted by the Secure hash encryption key. This key must be accessible when the function is called.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_8">8.4.2. Coding</h4>
+<h4 id="_coding_8">9.4.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3009,9 +3037,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sign_untrusted_hash">8.5. SIGN UNTRUSTED HASH</h3>
+<h3 id="_sign_untrusted_hash">9.5. SIGN UNTRUSTED HASH</h3>
 <div class="sect3">
-<h4 id="_description_9">8.5.1. Description</h4>
+<h4 id="_description_9">9.5.1. Description</h4>
 <div class="paragraph"><p>This command is used to sign a given secure hash using a private key (after re-hashing it following the standard Bitcoin signing process) to finalize a transaction input hash.</p></div>
 <div class="paragraph"><p>This command will be rejected if all outputs advertised for this transaction have not been processed.</p></div>
 <div class="paragraph"><p>The private key shall be encrypted by the Private key encryption key version passed as input parameter.
@@ -3020,7 +3048,7 @@ This key must be accessible when the function is called</p></div>
 <div class="paragraph"><p>The hash component will be decrypted by the Secure hash encryption key. This key must be accessible when the function is called.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_9">8.5.2. Coding</h4>
+<h4 id="_coding_9">9.5.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3189,11 +3217,11 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_data_structures">9. Data structures</h2>
+<h2 id="_data_structures">10. Data structures</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The format of the data structures is provided for interoperability and validation purposes. A typical user will not need to manipulate them directly.</p></div>
 <div class="sect2">
-<h3 id="_encoded_private_key_for_a_256_bits_curve">9.1. Encoded private key for a 256 bits curve</h3>
+<h3 id="_encoded_private_key_for_a_256_bits_curve">10.1. Encoded private key for a 256 bits curve</h3>
 <div class="paragraph"><p>An encoded private key is stored internally as follow, Triple DES encrypted by the private key encryption key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3244,7 +3272,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_authorized_address">9.2. Encoded authorized address</h3>
+<h3 id="_encoded_authorized_address">10.2. Encoded authorized address</h3>
 <div class="paragraph"><p>An encoded authorized address is stored internally as follow, Triple DES encrypted by the authorized address encryption key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3270,7 +3298,7 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Public key flags</p>
 <p class="table">                       0x01 : internally generated change address. Control rule amount restriction
                        will not apply</p></td>
-<td align="left" valign="top"><p class="table">2</p></td>
+<td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">3-4</p></td>
@@ -3280,7 +3308,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">5-10</p></td>
 <td align="left" valign="top"><p class="table">Nonce</p></td>
-<td align="left" valign="top"><p class="table">6</p></td>
+<td align="left" valign="top"><p class="table">7</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">11</p></td>
@@ -3297,7 +3325,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_secure_hash">9.3. Encoded secure hash</h3>
+<h3 id="_encoded_secure_hash">10.3. Encoded secure hash</h3>
 <div class="paragraph"><p>An encoded secure hash is stored internally as follow, Triple DES encrypted by the secure hash encryption key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3326,7 +3354,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">4-9</p></td>
 <td align="left" valign="top"><p class="table">Nonce</p></td>
-<td align="left" valign="top"><p class="table">6</p></td>
+<td align="left" valign="top"><p class="table">2</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">10-41</p></td>
@@ -3358,7 +3386,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_special_output_authorization">9.4. Encoded special output authorization</h3>
+<h3 id="_encoded_special_output_authorization">10.4. Encoded special output authorization</h3>
 <div class="paragraph"><p>An encoded special output authorization is stored internally as follow, Triple DES encrypted by the special output authorization encryption key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3420,31 +3448,31 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_security_risks_and_countermeasures">10. Security risks and countermeasures</h2>
+<h2 id="_security_risks_and_countermeasures">11. Security risks and countermeasures</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_local_attack_forcing_an_arbitrary_transaction_to_an_arbitrary_address">10.1. Local attack forcing an arbitrary transaction to an arbitrary address</h3>
+<h3 id="_local_attack_forcing_an_arbitrary_transaction_to_an_arbitrary_address">11.1. Local attack forcing an arbitrary transaction to an arbitrary address</h3>
 <div class="paragraph"><p>This scenario is always prevented when the dongle operates in untrusted mode</p></div>
 </div>
 <div class="sect2">
-<h3 id="_local_attack_forcing_a_transaction_with_an_arbitrary_amount_to_an_authorized_address">10.2. Local attack forcing a transaction with an arbitrary amount to an authorized address</h3>
+<h3 id="_local_attack_forcing_a_transaction_with_an_arbitrary_amount_to_an_authorized_address">11.2. Local attack forcing a transaction with an arbitrary amount to an authorized address</h3>
 <div class="paragraph"><p>This attack is limited to an arbitrary amount validating a transaction control rule defined by the dongle owner before the transaction</p></div>
 </div>
 <div class="sect2">
-<h3 id="_local_attack_replaying_a_specific_output_authorization">10.3. Local attack replaying a specific output authorization</h3>
+<h3 id="_local_attack_replaying_a_specific_output_authorization">11.3. Local attack replaying a specific output authorization</h3>
 <div class="paragraph"><p>This attack is prevented by the sequence counter given in the authorization</p></div>
 </div>
 <div class="sect2">
-<h3 id="_local_attack_modifying_all_displayed_bitcoin_addresses_to_addresses_owned_by_the_attacker">10.4. Local attack modifying all displayed bitcoin addresses to addresses owned by the attacker</h3>
+<h3 id="_local_attack_modifying_all_displayed_bitcoin_addresses_to_addresses_owned_by_the_attacker">11.4. Local attack modifying all displayed bitcoin addresses to addresses owned by the attacker</h3>
 <div class="paragraph"><p>3) profit ? if the user reads addresses from a compromised computer before paying :p</p></div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_samples">11. Samples</h2>
+<h2 id="_samples">12. Samples</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_sample_challenge_round">11.1. Sample challenge round</h3>
+<h3 id="_sample_challenge_round">12.1. Sample challenge round</h3>
 <div class="paragraph"><p>A simple challenge script is defined as follows :</p></div>
 <div class="ulist"><ul>
 <li>
@@ -3493,7 +3521,7 @@ IS NUMERIC 43 is interpreted as "Is character address 14 numeric ?". Address cha
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-01-22 00:17:51 CET
+Last updated 2013-02-18 22:19:59 CET
 </div>
 </div>
 </body>
