@@ -738,7 +738,7 @@ asciidoc.install(2);
 <h1>BTChip : Technical Specification</h1>
 <span id="author">BTChip</span><br />
 <span id="email"><tt>&lt;<a href="mailto:contact@btchip.com">contact@btchip.com</a>&gt;</tt></span><br />
-<span id="revdate">firmware version 1.4.2</span>
+<span id="revdate">firmware version 1.4.3</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -746,7 +746,24 @@ asciidoc.install(2);
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_1_4_2_bitcoin_2013_release">1. 1.4.2 (Bitcoin 2013 release)</h2>
+<h2 id="_1_4_3">1. 1.4.3</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+[enh] support payment to P2SH addresses as per <a href="https://en.bitcoin.it/wiki/BIP_0017">https://en.bitcoin.it/wiki/BIP_0017</a>
+</p>
+</li>
+<li>
+<p>
+specification review (GENERATE KEYPAIR security)
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_4_2_bitcoin_2013_release">2. 1.4.2 (Bitcoin 2013 release)</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
@@ -758,7 +775,7 @@ asciidoc.install(2);
 </div>
 </div>
 <div class="sect1">
-<h2 id="_1_4_1_private_release">2. 1.4.1 (private release)</h2>
+<h2 id="_1_4_1_private_release">3. 1.4.1 (private release)</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
@@ -775,7 +792,7 @@ asciidoc.install(2);
 </div>
 </div>
 <div class="sect1">
-<h2 id="_1_4_0_29c3_release">3. 1.4.0 (29c3 release)</h2>
+<h2 id="_1_4_0_29c3_release">4. 1.4.0 (29c3 release)</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
@@ -787,30 +804,31 @@ Initial release
 </div>
 </div>
 <div class="sect1">
-<h2 id="_about">4. About</h2>
+<h2 id="_about">5. About</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>BTChip is a USB smartcard/dongle dedicated to secure bitcoin transactions. It performs all sensitive cryptographic operations related to a bitcoin transaction (key generation &amp; signature) onboard, and helps protect against malware in an untrusted environment by controlling the signed data.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_operation_modes">5. Operation modes</h2>
+<h2 id="_operation_modes">6. Operation modes</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Operation modes define which operations are allowed given the security environment the dongle is operating in.</p></div>
 <div class="paragraph"><p>Two operation modes are defined, from the less restrictive to the more restrictive :</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Fully trusted : This mode should be reserved to known trusted environments. Arbitrary data can be signed, and no control is performed over bitcoin transactions.
+Fully trusted : This mode should be reserved to known trusted environments. Arbitrary data can be signed, arbitrary private keys can be imported, and no control is performed over bitcoin transactions.
 </p>
 </li>
 <li>
 <p>
-Moderately trusted : This mode should be reserved for moderately trusted environments. Bitcoin transactions are automatically signed according to preset user parameters.
+Moderately trusted : This mode should be reserved for moderately trusted environments. Bitcoin transactions are automatically signed according to preset user parameters, no arbitrary private key
+  can be imported.
 </p>
 </li>
 <li>
 <p>
-Untrusted : This mode is the default mode when using standard operation parameters. Each bitcoin transaction has to be authorized.
+Untrusted : This mode is the default mode when using standard operation parameters. Each bitcoin transaction has to be authorized, no arbitrary private key can be imported.
 </p>
 </li>
 <li>
@@ -822,16 +840,21 @@ Untrusted with transaction signing disabled : This mode should be enabled to onl
 <div class="paragraph"><p>The persistent operation mode will be restored when the dongle is powered on.</p></div>
 <div class="paragraph"><p>The user is always authorized to move from an operation mode to a more restrictive operation mode. However an authentication is required to move to a less restrictive operation mode.</p></div>
 <div class="sect2">
-<h3 id="_fully_trusted_operation_mode">5.1. Fully trusted operation mode</h3>
+<h3 id="_fully_trusted_operation_mode">6.1. Fully trusted operation mode</h3>
 <div class="paragraph"><p>All dongle functionalities are enabled in trusted mode. Arbitrary data can be signed by the dongle.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_moderately_trusted_operation_mode">5.2. Moderately trusted operation mode</h3>
-<div class="paragraph"><p>Only a single point-to-point output (i.e. the standard script) with one dongle generated change address is authorized.</p></div>
+<h3 id="_moderately_trusted_operation_mode">6.2. Moderately trusted operation mode</h3>
+<div class="paragraph"><p>Only a single point-to-point output (i.e. the standard script or a P2SH script) along with one dongle generated change address is authorized.</p></div>
 <div class="paragraph"><p>The standard script is coded as</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>OP_DUP OP_HASH160 [pubKeyHash] OP_EQUALVERIFY OP_CHECKSIG</tt></pre>
+</div></div>
+<div class="paragraph"><p>A P2SH script is coded as</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>OP_HASH160 [script hash] OP_EQUAL</tt></pre>
 </div></div>
 <div class="paragraph"><p>Transactions are controlled given user parameters and automatically signed if accepted.</p></div>
 <div class="paragraph"><p>Transactions can be controlled on a combination of the following parameters :</p></div>
@@ -864,12 +887,17 @@ Only authorizing an output address that has been registered previously
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_operation_mode">5.3. Untrusted operation mode</h3>
-<div class="paragraph"><p>Only a single point-to-point output (i.e. the standard script) with one dongle generated change address is authorized.</p></div>
+<h3 id="_untrusted_operation_mode">6.3. Untrusted operation mode</h3>
+<div class="paragraph"><p>Only a single point-to-point output (i.e. the standard script or a P2SH script) along with one dongle generated change address is authorized.</p></div>
 <div class="paragraph"><p>The standard script is coded as</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>OP_DUP OP_HASH160 [pubKeyHash] OP_EQUALVERIFY OP_CHECKSIG</tt></pre>
+</div></div>
+<div class="paragraph"><p>A P2SH script is coded as</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>OP_HASH160 [script hash] OP_EQUAL</tt></pre>
 </div></div>
 <div class="paragraph"><p>Each transaction has to be authenticated by the user given :</p></div>
 <div class="ulist"><ul>
@@ -897,11 +925,11 @@ the change private key address generated by the dongle
 <div class="paragraph"><p>A cryptographic hash is computed over the transaction data by an external system displaying the authorization data for user validation (smartphone, remote server &#8230;) and sent back to the dongle to authenticate the transaction.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_operation_mode_with_transaction_signing_disabled">5.4. Untrusted operation mode with transaction signing disabled</h3>
+<h3 id="_untrusted_operation_mode_with_transaction_signing_disabled">6.4. Untrusted operation mode with transaction signing disabled</h3>
 <div class="paragraph"><p>In this mode, only the GENERATE KEYPAIR OR IMPORT PRIVATE KEY function is enabled, and all cleartext key import functionalities are disabled for this command (the only authorized import is option 08 : diversification of a given value)</p></div>
 </div>
 <div class="sect2">
-<h3 id="_disabled_dongle_functionalities">5.5. Disabled dongle functionalities</h3>
+<h3 id="_disabled_dongle_functionalities">6.5. Disabled dongle functionalities</h3>
 <div class="paragraph"><p>When not operating in fully trusted mode, the following operations are disabled :</p></div>
 <div class="ulist"><ul>
 <li>
@@ -929,7 +957,7 @@ SYSTEM ADMINISTRATION - RESET if not authenticated with keyset 0x10
 </div>
 </div>
 <div class="sect1">
-<h2 id="_additional_keyset_types">6. Additional keyset types</h2>
+<h2 id="_additional_keyset_types">7. Additional keyset types</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The following keyset types are added - only the first key component of the keysets is used for all types.</p></div>
 <div class="ulist"><ul>
@@ -1006,10 +1034,10 @@ Transaction authorization signature : these keys will be used to authorize indiv
 </div>
 </div>
 <div class="sect1">
-<h2 id="_unique_internal_keypair">7. Unique Internal Keypair</h2>
+<h2 id="_unique_internal_keypair">8. Unique Internal Keypair</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_description">7.1. Description</h3>
+<h3 id="_description">8.1. Description</h3>
 <div class="paragraph"><p>It is possible to store a unique keypair into the dongle, never revealing the private key.</p></div>
 <div class="paragraph"><p>This private key cannot be backed up, and is mostly intended to exchange bitcoins between remote peers with no previously established trust relationship and be sure that the sender is not able to spend the coins sent to the receiver.</p></div>
 <div class="paragraph"><p>In this typical scenario, Sarah wants to send some coins to Rachel :</p></div>
@@ -1047,7 +1075,7 @@ Rachel receives the dongle, unlocks the Unique Internal Keypair with the previou
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_technical_details">7.2. Technical details</h3>
+<h3 id="_technical_details">8.2. Technical details</h3>
 <div class="paragraph"><p>The private key is stored into the encrypted non readable file /uik</p></div>
 <div class="paragraph"><p>Before generating the Unique Internal Keypair, keyset 0xFD must be present with a GlobalPlatform Authentication Role.</p></div>
 <div class="paragraph"><p>Keyset 0xFD is automatically deleted on the first successful authentication.</p></div>
@@ -1057,10 +1085,10 @@ Rachel receives the dongle, unlocks the Unique Internal Keypair with the previou
 </div>
 </div>
 <div class="sect1">
-<h2 id="_additional_files">8. Additional files</h2>
+<h2 id="_additional_files">9. Additional files</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_elliptic_curve_parameters">8.1. Elliptic curve parameters</h3>
+<h3 id="_elliptic_curve_parameters">9.1. Elliptic curve parameters</h3>
 <div class="paragraph"><p>Elliptic curve parameters are stored in transparent files in 3F00/CE15 DF, using the following format</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1146,7 +1174,7 @@ DELETE       NEVer
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_operation_parameters">8.2. Operation parameters</h3>
+<h3 id="_operation_parameters">9.2. Operation parameters</h3>
 <div class="paragraph"><p>Operation parameters are defined in the 0xb101 file located in 0x3f00. They define the basic functionalities of the dongle</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1206,7 +1234,7 @@ DELETE       0xFE (administrative keyset)
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_transaction_control">8.3. Transaction control</h3>
+<h3 id="_transaction_control">9.3. Transaction control</h3>
 <div class="paragraph"><p>Transaction control parameters are stored in transparent files in 3F00/0D11 DF, and are used to set generic rules for controlling transactions in moderately trusted mode, using the following format</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1337,19 +1365,19 @@ DELETE       0xFE (administrative keyset)
 </div>
 </div>
 <div class="sect1">
-<h2 id="_apdus_available_for_all_modes">9. APDUs available for all modes</h2>
+<h2 id="_apdus_available_for_all_modes">10. APDUs available for all modes</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_set_operation_mode">9.1. SET OPERATION MODE</h3>
+<h3 id="_set_operation_mode">10.1. SET OPERATION MODE</h3>
 <div class="sect3">
-<h4 id="_description_2">9.1.1. Description</h4>
+<h4 id="_description_2">10.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to set the operation mode of the dongle.</p></div>
 <div class="paragraph"><p>Going to a more restrictive operation mode is always authorized.</p></div>
 <div class="paragraph"><p>If going to a less restrictive operation mode, the user shall be authenticated by the GlobalPlatform user key 0x10.</p></div>
 <div class="paragraph"><p>The operation mode signature can be used by an external device to make sure that the mode switch is legitimate - it is computed as the last block of a 3DES-CBC encryption of the returned operation mode concatenated with the nonce.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding">9.1.2. Coding</h4>
+<h4 id="_coding">10.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1488,9 +1516,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_generate_keypair_or_import_private_key">9.2. GENERATE KEYPAIR OR IMPORT PRIVATE KEY</h3>
+<h3 id="_generate_keypair_or_import_private_key">10.2. GENERATE KEYPAIR OR IMPORT PRIVATE KEY</h3>
 <div class="sect3">
-<h4 id="_description_3">9.2.1. Description</h4>
+<h4 id="_description_3">10.2.1. Description</h4>
 <div class="paragraph"><p>This command is used to generate a keypair using the given curve parameters or import a given private key.</p></div>
 <div class="paragraph"><p>The file containing the curve parameter shall be selected before calling this command when generating a keypair.</p></div>
 <div class="paragraph"><p>The private part of the keypair will be encrypted by the Private key encryption key version passed as input parameter.
@@ -1509,9 +1537,10 @@ Keyset 0xFD must be present and set to GlobalPlatform Authentication Role
 </p>
 </li>
 </ul></div>
+<div class="paragraph"><p>Key import (prepare mode) functionalities are only authorized in Trusted mode.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_2">9.2.2. Coding</h4>
+<h4 id="_coding_2">10.2.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1701,15 +1730,15 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_get_public_key">9.3. GET PUBLIC KEY</h3>
+<h3 id="_get_public_key">10.3. GET PUBLIC KEY</h3>
 <div class="sect3">
-<h4 id="_description_4">9.3.1. Description</h4>
+<h4 id="_description_4">10.3.1. Description</h4>
 <div class="paragraph"><p>This command is used to retrieve the public given given an encrypted private key.</p></div>
 <div class="paragraph"><p>The private part of the keypair should be be encrypted by the Private key encryption key version passed as input parameter.
 This key must be accessible when the function is called</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_3">9.3.2. Coding</h4>
+<h4 id="_coding_3">10.3.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1841,19 +1870,19 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_trusted_operation_mode_apdus">10. Trusted operation mode APDUs</h2>
+<h2 id="_trusted_operation_mode_apdus">11. Trusted operation mode APDUs</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_authorize_address">10.1. AUTHORIZE ADDRESS</h3>
+<h3 id="_authorize_address">11.1. AUTHORIZE ADDRESS</h3>
 <div class="sect3">
-<h4 id="_description_5">10.1.1. Description</h4>
+<h4 id="_description_5">11.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to encode an address authorization.</p></div>
 <div class="paragraph"><p>The address is an hash160 (ripemd160 of a sha256) of an ECDSA public key, encoded using base58 or provided as binary data.</p></div>
 <div class="paragraph"><p>The authorized address will be encrypted by the Authorized address encryption version passed as input parameter.</p></div>
 <div class="paragraph"><p>This key must be accessible when the function is called</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_4">10.1.2. Coding</h4>
+<h4 id="_coding_4">11.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1878,7 +1907,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">E0</p></td>
 <td align="left" valign="top"><p class="table">22</p></td>
-<td align="left" valign="top"><p class="table">00 : address provided as a base58 string (if supported)</p>
+<td align="left" valign="top"><p class="table">00 : address provided as a base58 string</p>
 <p class="table">                     80 : address provided as a version byte + hash160</p></td>
 <td align="left" valign="top"><p class="table">00</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
@@ -1988,16 +2017,16 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ecdsa_sign_verify_immediate">10.2. ECDSA SIGN/VERIFY IMMEDIATE</h3>
+<h3 id="_ecdsa_sign_verify_immediate">11.2. ECDSA SIGN/VERIFY IMMEDIATE</h3>
 <div class="sect3">
-<h4 id="_description_6">10.2.1. Description</h4>
+<h4 id="_description_6">11.2.1. Description</h4>
 <div class="paragraph"><p>This command is used to sign a given hash using a private key or verify a given signature using a public key</p></div>
 <div class="paragraph"><p>The private key shall be encrypted by the Private key encryption key version passed as input parameter.
 This key must be accessible when the function is called</p></div>
 <div class="paragraph"><p>If a signature is required in untrusted mode, this command will exit with status word 0x6982</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_5">10.2.2. Coding</h4>
+<h4 id="_coding_5">11.2.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2184,18 +2213,18 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_apdus_available_for_moderately_trusted_and_untrusted_modes">11. APDUs available for moderately trusted and untrusted modes</h2>
+<h2 id="_apdus_available_for_moderately_trusted_and_untrusted_modes">12. APDUs available for moderately trusted and untrusted modes</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_get_trusted_input">11.1. GET TRUSTED INPUT</h3>
+<h3 id="_get_trusted_input">12.1. GET TRUSTED INPUT</h3>
 <div class="sect3">
-<h4 id="_description_7">11.1.1. Description</h4>
+<h4 id="_description_7">12.1.1. Description</h4>
 <div class="paragraph"><p>This command is used to extract a Trusted Input (encrypted transaction hash, output index, output amount) from a transaction.</p></div>
 <div class="paragraph"><p>The transaction data to be provided should be encoded using bitcoin standard raw transaction encoding. Scripts
 can be sent over several APDUs. Other individual transaction elements split over different APDUs will be rejected. 64 bits varints are rejected.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_6">11.1.2. Coding</h4>
+<h4 id="_coding_6">12.1.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2356,9 +2385,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_transaction_input_start">11.2. UNTRUSTED HASH TRANSACTION INPUT START</h3>
+<h3 id="_untrusted_hash_transaction_input_start">12.2. UNTRUSTED HASH TRANSACTION INPUT START</h3>
 <div class="sect3">
-<h4 id="_description_8">11.2.1. Description</h4>
+<h4 id="_description_8">12.2.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for a new transaction, controlled by the given transaction control file.</p></div>
 <div class="paragraph"><p>The transaction data to be provided should be encoded using bitcoin standard raw transaction encoded as follows :</p></div>
 <div class="ulist"><ul>
@@ -2385,7 +2414,7 @@ Scripts can be sent over several APDUs. Other individual transaction elements sp
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_7">11.2.2. Coding</h4>
+<h4 id="_coding_7">12.2.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2524,22 +2553,27 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_transaction_input_finalize">11.3. UNTRUSTED HASH TRANSACTION INPUT FINALIZE</h3>
+<h3 id="_untrusted_hash_transaction_input_finalize">12.3. UNTRUSTED HASH TRANSACTION INPUT FINALIZE</h3>
 <div class="sect3">
-<h4 id="_description_9">11.3.1. Description</h4>
+<h4 id="_description_9">12.3.1. Description</h4>
 <div class="paragraph"><p>This command is used to compose an opaque SHA-256 hash for the transaction outputs</p></div>
 <div class="paragraph"><p>This command is rejected if all inputs advertised at the beginning of the transaction have not been processed first.</p></div>
-<div class="paragraph"><p>The generated script will be the standard script coded as below given the address.</p></div>
+<div class="paragraph"><p>The generated script will be the standard script coded as below given the address for a non script address</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>OP_DUP OP_HASH160 [pubKeyHash] OP_EQUALVERIFY OP_CHECKSIG</tt></pre>
+</div></div>
+<div class="paragraph"><p>For a P2SH script address the generated script will be</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>OP_HASH160 [script hash] OP_EQUAL</tt></pre>
 </div></div>
 <div class="paragraph"><p>The output amount, fees and change will be optionally enforced in moderately trusted mode given the transaction control file used for this transaction</p></div>
 <div class="paragraph"><p>In untrusted mode, an authorization will be computed for the transaction using the output address, the output amount, the fees, change address and a hash of the transaction not including input script data.</p></div>
 <div class="paragraph"><p>The generated transaction output data contains in pre-serialized form the number of outputs (target &amp; optionally change) and each output data</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_8">11.3.2. Coding</h4>
+<h4 id="_coding_8">12.3.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2565,8 +2599,9 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">E0</p></td>
 <td align="left" valign="top"><p class="table">46</p></td>
 <td align="left" valign="top"><p class="table">01 : output address provided as binary hash160</p>
-<p class="table">                    02 : output address provided as base58 string (if supported)</p>
-<p class="table">                    03 : output address provided as authorized address</p></td>
+<p class="table">                    02 : output address provided as base58 string</p>
+<p class="table">                    03 : output address provided as authorized address</p>
+<p class="table">                    04 : P2SH output address provided as binary hash160</p></td>
 <td align="left" valign="top"><p class="table">Authorized Address encryption keyset version used if providing the output address
                         as an Authorized Address</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
@@ -2768,9 +2803,9 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_untrusted_hash_sign">11.4. UNTRUSTED HASH SIGN</h3>
+<h3 id="_untrusted_hash_sign">12.4. UNTRUSTED HASH SIGN</h3>
 <div class="sect3">
-<h4 id="_description_10">11.4.1. Description</h4>
+<h4 id="_description_10">12.4.1. Description</h4>
 <div class="paragraph"><p>This command is used to sign a given secure hash using a private key (after re-hashing it following the standard Bitcoin signing process) to finalize a transaction input signing process.</p></div>
 <div class="paragraph"><p>This command will be rejected if the transaction signing state is not consistent or if a Transaction Authorization is required and the provided Transaction Authorization signature is not correct.</p></div>
 <div class="paragraph"><p>The private key shall be encrypted by the Private key encryption key version passed as input parameter.
@@ -2778,7 +2813,7 @@ This key must be accessible when the function is called</p></div>
 <div class="paragraph"><p>The locktime and SigHash value will be enforced given the transaction control file used for this transaction</p></div>
 </div>
 <div class="sect3">
-<h4 id="_coding_9">11.4.2. Coding</h4>
+<h4 id="_coding_9">12.4.2. Coding</h4>
 <div class="paragraph"><p><em>Command</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2936,17 +2971,17 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_transaction_context_import_export">11.5. TRANSACTION CONTEXT IMPORT/EXPORT</h3>
+<h3 id="_transaction_context_import_export">12.5. TRANSACTION CONTEXT IMPORT/EXPORT</h3>
 <div class="paragraph"><p>RFU.</p></div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_data_structures">12. Data structures</h2>
+<h2 id="_data_structures">13. Data structures</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The format of the data structures is provided for interoperability and validation purposes. A typical user will not need to manipulate them directly.</p></div>
 <div class="sect2">
-<h3 id="_encoded_private_key_for_a_256_bits_curve">12.1. Encoded private key for a 256 bits curve</h3>
+<h3 id="_encoded_private_key_for_a_256_bits_curve">13.1. Encoded private key for a 256 bits curve</h3>
 <div class="paragraph"><p>An encoded private key is stored internally as follow, Triple DES encrypted by the private key encryption key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2989,7 +3024,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_authorized_address">12.2. Encoded authorized address</h3>
+<h3 id="_encoded_authorized_address">13.2. Encoded authorized address</h3>
 <div class="paragraph"><p>An encoded authorized address is stored internally as follow. The signature is the last block of a Triple DES CBC encryption of the previous data by the encoded authorized address encryption key.</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3036,7 +3071,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_trusted_input">12.3. Encoded trusted input</h3>
+<h3 id="_encoded_trusted_input">13.3. Encoded trusted input</h3>
 <div class="paragraph"><p>An encoded trusted input is stored internally as follow. The signature is the last block of a Triple DES CBC encryption of the previous data by the trusted input encryption key.</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3079,7 +3114,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_transaction_context_for_dongle_exchange">12.4. Transaction context for dongle exchange</h3>
+<h3 id="_transaction_context_for_dongle_exchange">13.4. Transaction context for dongle exchange</h3>
 <div class="paragraph"><p>RFU.</p></div>
 </div>
 </div>
@@ -3088,7 +3123,7 @@ cellspacing="0" cellpadding="4">
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-05-15 01:54:40 CEST
+Last updated 2013-06-15 14:20:35 CEST
 </div>
 </div>
 </body>
