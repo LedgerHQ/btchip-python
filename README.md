@@ -87,7 +87,7 @@ The chip is a smartcard certified platform (for the time being we'll let the pot
 
   * When will it go for sale ? 
 
-The final version should be available early 2013 and cost around 1 BTC with shipping included
+The final version should be available in 2014, but we don't know when...
 
 License
 -------
