@@ -970,7 +970,8 @@ A maximum number of consecutive transactions before the dongle is removed
 <div class="paragraph"><p>For a new dongle not used as a backup device, a regular user will create a new random seed for a HD wallet and a PIN.</p></div>
 <div class="paragraph"><p>The PIN is used to perform a new payment transaction - it is sent as cleartext to the dongle and is not intended to be used as a malware protection method, only as an anti theft security.</p></div>
 <div class="paragraph"><p>After SETUP is performed, the dongle has to be reset to wipe out all parameters and start again - this can be achieved by entering the wrong PIN 3 times in a row.</p></div>
-<div class="paragraph"><p>It is recommended to store the BIP32 seed given in the output of the SETUP command in a safe location for backup purposes - typically GPG encrypt it to yourself and store it on multiple storage devices / clouds.</p></div>
+<div class="paragraph"><p>A wipe PIN can be provided for plausible deniability - when entered instead of the regular user PIN, the seed is replaced by a random one and the device keeps operating.</p></div>
+<div class="paragraph"><p>It is recommended to store the BIP32 seed returned in the output of the SETUP command in a safe location for backup purposes - typically GPG encrypt it to yourself and store it on multiple storage devices / clouds.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_coding">8.1.2. Coding</h4>
@@ -1021,18 +1022,35 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">Bitflag of supported operation modes</p>
-<p class="table">    0x01 : wallet mode
-    0x02 : relaxed wallet mode
-    0x04 : server mode
-    0x08 : developer mode</p></td>
+<p class="table">    0x01 : wallet mode</p>
+<p class="table">    0x02 : relaxed wallet mode</p>
+<p class="table">    0x04 : server mode</p>
+<p class="table">    0x08 : developer mode</p>
+<p class="table">    0x80 : enable RFC 6979 deterministic signatures (otherwise use a random K)</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">PIN length (from 0x08 up to 0x20)</p></td>
+<td align="left" valign="top"><p class="table">Key version accepted for regular addresses</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">PIN</p></td>
+<td align="left" valign="top"><p class="table">Key version accepted for Pay To Script Hash Addresses (BIP 16), or 0x00 if disabled</p></td>
+<td align="left" valign="top"><p class="table">1</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">User PIN length (from 0x04 up to 0x20)</p></td>
+<td align="left" valign="top"><p class="table">1</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">User PIN</p></td>
+<td align="left" valign="top"><p class="table">var</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Wipe PIN length (from 0x00 up to 0x04)</p></td>
+<td align="left" valign="top"><p class="table">1</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Wipe PIN</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 </tr>
 <tr>
@@ -1044,12 +1062,12 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">var</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">BIP32 Seed length (0x00 to generate a new seed, 0x20 to set up a backup)</p></td>
+<td align="left" valign="top"><p class="table">BIP32 Seed flag (0x00 to generate a new seed, 0x01 to restore a seed backup)</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">BIP32 Seed</p></td>
-<td align="left" valign="top"><p class="table">null or 32</p></td>
+<td align="left" valign="top"><p class="table">User entropy if generating a new seed, BIP32 Seed if restoring a seed backup</p></td>
+<td align="left" valign="top"><p class="table">32</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">3DES-2 key wrapping key length for developer mode (0x00 to generate a new key,
@@ -1063,6 +1081,80 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
+<div class="paragraph"><p>When enabled, RFC 6979 deterministic signatures will be used for all operations in wallet, relaxed wallet and server modes, and will be optionally available in developer mode.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Using deterministic signatures will make the signing process slower and could possibly create a larger side channel attack surface due to the way private keys are handled during the computation of the random value. We suggest to only enable this mode if you don&#8217;t trust the chip hardware Random Number Generator.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>The following Key version are suggested for regular addresses</p></div>
+<div class="tableblock">
+<table rules="all"
+width="80%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Network</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Version (dec)</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Bitcoin (main network)</p></td>
+<td align="left" valign="top"><p class="table">0</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Bitcoin (test network)</p></td>
+<td align="left" valign="top"><p class="table">111</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Litecoin (main network)</p></td>
+<td align="left" valign="top"><p class="table">48</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Litecoin (test network)</p></td>
+<td align="left" valign="top"><p class="table">111</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Dogecoin (main network)</p></td>
+<td align="left" valign="top"><p class="table">30</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Dogecoin (test network)</p></td>
+<td align="left" valign="top"><p class="table">113</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p>The following Key version are suggested for Pay To Script Hash addresses</p></div>
+<div class="tableblock">
+<table rules="all"
+width="80%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Network</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Version (dec)</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Bitcoin (main network)</p></td>
+<td align="left" valign="top"><p class="table">5</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Bitcoin (test network)</p></td>
+<td align="left" valign="top"><p class="table">196</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p>If generating a new seed, the dongle generates a 32 bytes random from its hardware Random Number Generator and performs an exclusive OR between this number and the provided user entropy to create the seed.</p></div>
 <div class="paragraph"><p>A keymap encoding is a set of Keyboard HID Usage IDs mapping the keyboard layout of the computer on which the user validation is performed. If several keymap encodings are provided, the user validation will be typed using all provided encodings, separated by a Carriage Return.</p></div>
 <div class="paragraph"><p>Each keymap encoding is coded as follows</p></div>
 <div class="tableblock">
@@ -1079,7 +1171,8 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">Flags</p>
-<p class="table">    0x01 : Numbers are typed with SHIFT key pushed</p></td>
+<p class="table">    0x01 : Numbers are typed with SHIFT key pushed
+    0x02 : Decimal mark is typed with SHIFT key pushed</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
@@ -1089,6 +1182,10 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">Hid mapping codes from <em>A</em> to <em>Z</em></p></td>
 <td align="left" valign="top"><p class="table">26</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Hid mapping code for decimal mark</p></td>
+<td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">Hid mapping code for SPACE</p></td>
@@ -1107,6 +1204,7 @@ cellspacing="0" cellpadding="4">
 <pre><tt>00
 27 1E 1F 20 21 22 23 24 25 26
 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D
+37
 2C
 28</tt></pre>
 </div></div>
@@ -1122,6 +1220,10 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table"><strong>Description</strong></p></td>
 <td align="left" valign="top"><p class="table"><strong>Length</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Random generated, or 00..00 if restoring an existing seed</p></td>
+<td align="left" valign="top"><p class="table">32</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">BIP32 Seed</p></td>
@@ -1193,6 +1295,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p>This command is used to unlock the dongle using the PIN provided during setup.</p></div>
 <div class="paragraph"><p>The dongle must be physically reset after each invalid PIN to issue a new command.</p></div>
 <div class="paragraph"><p>After 3 invalid PIN submitted in a row, the dongle data is erased and it must be setup again.</p></div>
+<div class="paragraph"><p>If the wipe PIN is entered instead of the user PIN, the device seed is replaced by a random one and the device keeps operating.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_coding_2">8.2.2. Coding</h4>
@@ -1353,8 +1456,8 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Operation Mode</p>
 <p class="table">      0x01 : standard wallet
       0x02 : relaxed wallet
-      0x03 : server
-      0x04 : developer</p></td>
+      0x04 : server
+      0x08 : developer</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 </tbody>
@@ -1462,8 +1565,8 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Operation Mode</p>
 <p class="table">      0x01 : standard wallet
       0x02 : relaxed wallet
-      0x03 : server
-      0x04 : developer</p></td>
+      0x04 : server
+      0x08 : developer</p></td>
 <td align="left" valign="top"><p class="table">1</p></td>
 </tr>
 </tbody>
@@ -1472,7 +1575,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p><em>Output data</em></p></div>
 <div class="paragraph"><p>None</p></div>
 <div class="paragraph"><p><em>Availability</em></p></div>
-<div class="paragraph"><p>This function is always available following dongle setup.</p></div>
+<div class="paragraph"><p>This function is always available following dongle setup, and is protected by the user PIN.</p></div>
 <div class="paragraph"><p><em>Status Words</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1618,7 +1721,7 @@ cellspacing="0" cellpadding="4">
 </table>
 </div>
 <div class="paragraph"><p><em>Availability</em></p></div>
-<div class="paragraph"><p>This function is always available following dongle setup in standard wallet, relaxed wallet and server operation modes.</p></div>
+<div class="paragraph"><p>This function is always available following dongle setup in standard wallet, relaxed wallet and server operation modes, and is protected by the user PIN.</p></div>
 <div class="paragraph"><p><em>Status Words</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -1889,8 +1992,8 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">44</p></td>
 <td align="left" valign="top"><p class="table">00 : first transaction data block</p>
 <p class="table">                    80 : subsequent transaction data block</p></td>
-<td align="left" valign="top"><p class="table">00 : start signing a new transaction
-                         80 : continue signing another input of the current transaction</p></td>
+<td align="left" valign="top"><p class="table">00 : start signing a new transaction</p>
+<p class="table">                         80 : continue signing another input of the current transaction</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 </tr>
@@ -1920,7 +2023,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p><em>Output data</em></p></div>
 <div class="paragraph"><p>None</p></div>
 <div class="paragraph"><p><em>Availability</em></p></div>
-<div class="paragraph"><p>This function is always available following dongle setup in standard wallet, relaxed wallet and server operation modes.</p></div>
+<div class="paragraph"><p>This function is always available following dongle setup in standard wallet, relaxed wallet and server operation modes, and is protected by the user PIN when starting to sign a new transaction (P1 and P2 set to 0x00)</p></div>
 <div class="paragraph"><p><em>Status Words</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -2020,9 +2123,8 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">E0</p></td>
 <td align="left" valign="top"><p class="table">46</p></td>
-<td align="left" valign="top"><p class="table">01 : output address provided as binary hash160</p>
-<p class="table">                    02 : output address provided as base58 string</p>
-<p class="table">                    03 : P2SH output address provided as binary hash160</p></td>
+<td align="left" valign="top"><p class="table">01 : output address provided as version byte + binary hash160</p>
+<p class="table">                    02 : output address provided as base58 string</p></td>
 <td align="left" valign="top"><p class="table">00</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
@@ -2058,6 +2160,14 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">Fees (big endian)</p></td>
 <td align="left" valign="top"><p class="table">8</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Account of the internal change address to use (big endian)</p></td>
+<td align="left" valign="top"><p class="table">4</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Chain index of the internal change address to use (big endian)</p></td>
+<td align="left" valign="top"><p class="table">4</p></td>
 </tr>
 </tbody>
 </table>
@@ -3019,7 +3129,7 @@ cellspacing="0" cellpadding="4">
 </table>
 </div>
 <div class="paragraph"><p><em>Availability</em></p></div>
-<div class="paragraph"><p>This function is always available following dongle setup in developer operation mode.</p></div>
+<div class="paragraph"><p>This function is always available following dongle setup in developer operation mode, and is protected by the user PIN.</p></div>
 <div class="paragraph"><p><em>Status Words</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3233,7 +3343,8 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">B6</p></td>
 <td align="left" valign="top"><p class="table">00 : sign</p>
 <p class="table">                     80 : verify</p></td>
-<td align="left" valign="top"><p class="table">00</p></td>
+<td align="left" valign="top"><p class="table">00 : sign with random K</p>
+<p class="table">                                            80 : sign with deterministic K, if enabled on setup</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 <td align="left" valign="top"><p class="table">var</p></td>
 </tr>
@@ -3327,7 +3438,7 @@ cellspacing="0" cellpadding="4">
 <div class="paragraph"><p><em>Output data (verify mode)</em></p></div>
 <div class="paragraph"><p>None</p></div>
 <div class="paragraph"><p><em>Availability</em></p></div>
-<div class="paragraph"><p>This function is always available following dongle setup in developer operation mode.</p></div>
+<div class="paragraph"><p>This function is always available following dongle setup in developer operation mode, and is protected by the user PIN</p></div>
 <div class="paragraph"><p><em>Status Words</em></p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3385,11 +3496,122 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_data_structures">12. Data structures</h2>
+<h2 id="_test_apdus">12. Test APDUs</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_get_random">12.1. GET RANDOM</h3>
+<div class="sect3">
+<h4 id="_description_18">12.1.1. Description</h4>
+<div class="paragraph"><p>This command returns random bytes from the dongle hardware random number generator</p></div>
+</div>
+<div class="sect3">
+<h4 id="_coding_18">12.1.2. Coding</h4>
+<div class="paragraph"><p><em>Command</em></p></div>
+<div class="tableblock">
+<table rules="all"
+width="80%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>CLA</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>INS</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>P1</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>P2</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Lc</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Le</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">E0</p></td>
+<td align="left" valign="top"><p class="table">C0</p></td>
+<td align="left" valign="top"><p class="table">00</p></td>
+<td align="left" valign="top"><p class="table">00</p></td>
+<td align="left" valign="top"><p class="table">00</p></td>
+<td align="left" valign="top"><p class="table">variable</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p><em>Input data</em></p></div>
+<div class="paragraph"><p>None</p></div>
+<div class="paragraph"><p><em>Output data</em></p></div>
+<div class="tableblock">
+<table rules="all"
+width="80%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Description</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Length</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">Random bytes</p></td>
+<td align="left" valign="top"><p class="table">variable</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p><em>Availability</em></p></div>
+<div class="paragraph"><p>This function is always available.</p></div>
+<div class="paragraph"><p><em>Status Words</em></p></div>
+<div class="tableblock">
+<table rules="all"
+width="80%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>SW</strong></p></td>
+<td align="left" valign="top"><p class="table"><strong>Description</strong></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">6581</p></td>
+<td align="left" valign="top"><p class="table">Memory problem</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">6700</p></td>
+<td align="left" valign="top"><p class="table">Incorrect length</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">6982</p></td>
+<td align="left" valign="top"><p class="table">Security status not satisfied (Bitcoin dongle is locked or invalid access rights)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">6B00</p></td>
+<td align="left" valign="top"><p class="table">Incorrect parameter P1 or P2</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">6Fxx</p></td>
+<td align="left" valign="top"><p class="table">Technical problem (00 : no diagnostic given)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">9000</p></td>
+<td align="left" valign="top"><p class="table">Normal ending of the command</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_structures">13. Data structures</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The format of the data structures is provided for interoperability and validation purposes. A typical user will not need to manipulate them directly.</p></div>
 <div class="sect2">
-<h3 id="_encoded_private_key_in_developer_mode">12.1. Encoded private key in developer mode</h3>
+<h3 id="_encoded_private_key_in_developer_mode">13.1. Encoded private key in developer mode</h3>
 <div class="paragraph"><p>An encoded private key is stored internally as follow, Triple DES encrypted by the developer mode wrapping key</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3447,7 +3669,7 @@ cellspacing="0" cellpadding="4">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_encoded_trusted_input">12.2. Encoded trusted input</h3>
+<h3 id="_encoded_trusted_input">13.2. Encoded trusted input</h3>
 <div class="paragraph"><p>An encoded trusted input is stored internally as follow. The signature is the last block of a Triple DES CBC encryption of the previous data by the trusted input encryption key.</p></div>
 <div class="tableblock">
 <table rules="all"
@@ -3471,7 +3693,7 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">Associated transaction hash</p></td>
-<td align="left" valign="top"><p class="table">20</p></td>
+<td align="left" valign="top"><p class="table">32</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">Index in associated transaction</p></td>
@@ -3495,7 +3717,7 @@ cellspacing="0" cellpadding="4">
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-12-26 00:37:20 CET
+Last updated 2014-03-11 14:31:55 CET
 </div>
 </div>
 </body>
