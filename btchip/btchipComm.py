@@ -1,6 +1,6 @@
 """
 *******************************************************************************    
-*   BTChip Bitcoin Hardware Wallet C test interface
+*   BTChip Bitcoin Hardware Wallet Python API
 *   (c) 2014 BTChip - 1BTChip7VfTnrPra5jqci7ejnMguuHogTn
 *   
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ class Dongle(object):
 	__metaclass__ = ABCMeta
 
 	@abstractmethod
-	def exchange(self, apdu):
+	def exchange(self, apdu, timeout=10000):
 		pass
 
 	@abstractmethod
@@ -35,15 +35,17 @@ class Dongle(object):
 
 class HIDDongle(Dongle):
 
-	def __init__(self, device):
+	def __init__(self, device, debug=False):
 		self.device = device
+		self.debug = debug
 		try:
 			self.device.detach_kernel_driver(0)
 		except:
 			pass
 
-	def exchange(self, apdu):
-		print "=> " + hexlify(apdu)
+	def exchange(self, apdu, timeout=10000):
+		if self.debug:
+			print "=> %s" % hexlify(apdu)
 		padSize = len(apdu) % 64
 		tmp = apdu
 		if padSize <> 0:
@@ -53,7 +55,7 @@ class HIDDongle(Dongle):
 			self.device.write(0x02, tmp[offset:offset + 64], 0)
 			offset += 64
 		dataLength = 0
-		result = bytearray(self.device.read(0x82, 64, 0, 10000))
+		result = bytearray(self.device.read(0x82, 64, 0, timeout))
 		if result[0] == 0x61: # 61xx : data available
 			dataLength = result[1]
 			dataLength += 2
@@ -64,17 +66,18 @@ class HIDDongle(Dongle):
 						blockLength = 64
 					else:
 						blockLength = remaining
-					result.extend(bytearray(self.device.read(0x82, 64, 0, 10000))[0:blockLength])
+					result.extend(bytearray(self.device.read(0x82, 64, 0, timeout))[0:blockLength])
 					remaining -= blockLength
 			swOffset = dataLength
 			dataLength -= 2
 		else:
 			swOffset = 0
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
-		if sw <> 0x9000:
-			raise BTChipException("Invalid status %04x" % sw)
 		response = result[2 : dataLength + 2]
-		print "<= " + hexlify(response)
+		if self.debug:
+			print "<= %s%.2x" % (hexlify(response), sw)		
+		if sw <> 0x9000:
+			raise BTChipException("Invalid status %04x" % sw, sw)
 		return response
 
 	def close(self):
@@ -82,15 +85,22 @@ class HIDDongle(Dongle):
 			self.device.attach_kernel_driver(0)
 		except:
 			pass
+		try:
+			self.device.reset()
+		except:
+			pass
 
 class WinUSBDongle(Dongle):
 
-	def __init__(self, device):
+	def __init__(self, device, debug=False):
 		self.device = device
+		self.debug = debug
 
-	def exchange(self, apdu):
+	def exchange(self, apdu, timeout=10000):
+		if self.debug:
+			print "=> %s" % hexlify(apdu)
 		self.device.write(0x02, apdu, 0)
-		result = bytearray(self.device.read(0x82, 260, 0, 10000))
+		result = bytearray(self.device.read(0x82, 260, 0, timeout))
 		dataLength = 0
 		if result[0] == 0x61: # 61xx : data available
 			dataLength = result[1]
@@ -98,24 +108,30 @@ class WinUSBDongle(Dongle):
 		else:
 			swOffset = 0
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
+		response = result[2 : dataLength + 2]
+		if self.debug:
+			print "<= %s%.2x" % (hexlify(response), sw)		
 		if sw <> 0x9000:
-			raise BTChipException("Invalid status %04x" % sw)
-		return result[2 : dataLength + 2]
+			raise BTChipException("Invalid status %04x" % sw, sw)
+		return response
 
 	def close(self):
-		pass
+		try:
+			self.device.reset()
+		except:
+			pass
 
-def getDongle():
+def getDongle(debug=False):
 	dev = usb.core.find(idVendor=0x2581, idProduct=0x1b7c) # core application, WinUSB
 	if dev is not None:
-		return WinUSBDongle(dev)	
+		return WinUSBDongle(dev, debug)	
 	dev = usb.core.find(idVendor=0x2581, idProduct=0x1808) # bootloader, WinUSB
 	if dev is not None:
-		return WinUSBDongle(dev)	
+		return WinUSBDongle(dev, debug)	
 	dev = usb.core.find(idVendor=0x2581, idProduct=0x2b7c) # core application, Generic HID
 	if dev is not None:
-		return HIDDongle(dev)
+		return HIDDongle(dev, debug)
 	dev = usb.core.find(idVendor=0x2581, idProduct=0x1807) # bootloader, Generic HID
 	if dev is not None:
-		return HIDDongle(dev)
+		return HIDDongle(dev, debug)
 	raise BTChipException("No dongle found")

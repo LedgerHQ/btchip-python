@@ -17,12 +17,32 @@
 ********************************************************************************
 """
 
-class BTChipException(Exception):
+from btchip.btchip import *
+import sys
 
-	def __init__(self, message, sw=None):
-		self.message = message
-		self.sw = sw
+if len(sys.argv) < 2:
+	print "Usage : %s script to run" % sys.argv[0]
+	sys.exit(2)
 
-	def __str__(self):
-		buf = "Exception : " + self.message
-		return buf
+dongle = getDongle(True)
+
+scriptFile = open(sys.argv[1], "r")
+line = scriptFile.readline()
+while line:	
+	if (len(line) == 0) or (line[0] == '#'):
+		continue
+	cancelResponse = (line[0] == '!')
+	timeout = 10000
+	if cancelResponse:
+		line = line[1:]
+		timeout = 1
+	try:
+		line = line.rstrip()		
+		dongle.exchange(bytearray(line.decode('hex')), timeout)
+	except:
+		if cancelResponse:
+			pass
+		else:
+			raise
+	line = scriptFile.readline()
+scriptFile.close()
