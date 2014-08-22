@@ -52,9 +52,6 @@ class btchip:
 	BTCHIP_INS_COMPOSE_MOFN_ADDRESS = 0xc6
 	BTCHIP_INS_GET_POS_SEED = 0xca
 
-	CHAIN_EXTERNAL = 0x01
-	CHAIN_INTERNAL = 0x02
-
 	OPERATION_MODE_WALLET = 0x01
 	OPERATION_MODE_RELAXED_WALLET = 0x02
 	OPERATION_MODE_SERVER = 0x04
@@ -75,18 +72,18 @@ class btchip:
 		apdu.extend(bytearray(pin))
 		self.dongle.exchange(bytearray(apdu))
 
-	def getWalletPublicKey(self, internal, accountNumber, chainIndex):
+	def getWalletPublicKey(self, path):
 		result = {}
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, \
-		(btchip.CHAIN_INTERNAL if internal else btchip.CHAIN_EXTERNAL), 0x00 ]
-		params = []
-		writeUint32BE(accountNumber, params)
-		writeUint32BE(chainIndex, params)
-		apdu.append(len(params))
-		apdu.extend(params)
+		donglePath = parse_bip32_path(path)
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x00, 0x00, len(donglePath) ]
+		apdu.extend(donglePath)
 		response = self.dongle.exchange(bytearray(apdu))
-		result['publicKey'] = response[1:1 + response[0]]
-		result['address'] = str(response[2 + response[0]:])
+		offset = 0
+		result['publicKey'] = response[offset + 1 : offset + 1 + response[offset]]
+		offset = offset + 1 + response[offset]
+		result['address'] = str(response[offset + 1 : offset + 1 + response[offset]])
+		offset = offset + 1 + response[offset]
+		result['chainCode'] = response[offset : offset + 32]
 		return result
 
 	def getTrustedInput(self, transaction, index):
@@ -165,17 +162,16 @@ class btchip:
 			self.dongle.exchange(bytearray(apdu))		
 			currentIndex += 1
 
-	def finalizeInput(self, outputAddress, amount, fees, changeInternal, changeAccountNumber, changeChainIndex):
+	def finalizeInput(self, outputAddress, amount, fees, changePath):
+		donglePath = parse_bip32_path(changePath)
 		result = {}
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, \
-		0x02, (btchip.CHAIN_INTERNAL if changeInternal else btchip.CHAIN_EXTERNAL) ]
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]
 		params = []
 		params.append(len(outputAddress))
 		params.extend(bytearray(outputAddress))
 		writeHexAmountBE(btc_to_satoshi(str(amount)), params)
 		writeHexAmountBE(btc_to_satoshi(str(fees)), params)
-		writeUint32BE(changeAccountNumber, params)
-		writeUint32BE(changeChainIndex, params)
+		params.extend(donglePath)
 		response = apdu.append(len(params))
 		apdu.extend(params)
 		response = self.dongle.exchange(bytearray(apdu))		
@@ -202,15 +198,11 @@ class btchip:
 		result['confirmationNeeded'] = response[0] == 0x01
 		return result
 
-	def untrustedHashSign(self, internal, accountNumber, chainIndex, pin="", lockTime=0, sighashType=0x01):
+	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
+		donglePath = parse_bip32_path(path)
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_SIGN, 0x00, 0x00 ]		
 		params = []
-		writeUint32BE(accountNumber, params)		
-		writeUint32BE(chainIndex, params)
-		if internal:
-			params.append(btchip.CHAIN_INTERNAL)
-		else:
-			params.append(btchip.CHAIN_EXTERNAL)
+		params.extend(donglePath)
 		params.append(len(pin))
 		params.extend(bytearray(pin))
 		writeUint32BE(lockTime, params)
@@ -220,16 +212,12 @@ class btchip:
 		result = self.dongle.exchange(bytearray(apdu))		
 		return result
 
-	def signMessagePrepare(self, internal, accountNumber, chainIndex, message):
+	def signMessagePrepare(self, path, message):
+		donglePath = parse_bip32_path(path)
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGN_MESSAGE, 0x00, 0x00 ]
 		params = []
-		writeUint32BE(accountNumber, params)		
-		writeUint32BE(chainIndex, params)
-		if internal:
-			params.append(btchip.CHAIN_INTERNAL)
-		else:
-			params.append(btchip.CHAIN_EXTERNAL)
+		params.extend(donglePath)
 		params.append(len(message))		
 		params.extend(bytearray(message))
 		apdu.append(len(params))
@@ -251,7 +239,7 @@ class btchip:
 		response = self.dongle.exchange(bytearray(apdu))		
 		return response		
 
-	def setup(self, operationModeFlags, featuresFlag, keyVersion, keyVersionP2SH, userPin, wipePin, keymapEncoding, seed=None, userEntropy=None, developerKey=None):
+	def setup(self, operationModeFlags, featuresFlag, keyVersion, keyVersionP2SH, userPin, wipePin, keymapEncoding, seed=None, developerKey=None):
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SETUP, 0x00, 0x00 ]
 		params = [ operationModeFlags, featuresFlag, keyVersion, keyVersionP2SH ]
@@ -261,17 +249,14 @@ class btchip:
 			params.append(len(wipePin))
 			params.extend(bytearray(wipePin))
 		else:
-			params.append(0x00)
-		params.extend(keymapEncoding)
+			params.append(0x00)		
 		if seed is not None:
-			params.append(0x01)
+			if len(seed) < 32 or len(seed) > 64:
+				raise BTChipException("Invalid seed length")
+			params.append(len(seed))
 			params.extend(seed)
 		else:
 			params.append(0x00)
-			if userEntropy is not None:
-				params.extend(userEntropy)
-			else:
-				params.extend([0] * 32)
 		if developerKey is not None:
 			params.append(len(developerKey))		
 			params.extend(developerKey)
@@ -282,7 +267,15 @@ class btchip:
 		response = self.dongle.exchange(bytearray(apdu))		
 		result['trustedInputKey'] = response[0:16]
 		result['developerKey'] = response[16:]
+		self.setKeymapEncoding(keymapEncoding)
 		return result
+
+	def setKeymapEncoding(self, keymapEncoding):
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_KEYMAP, 0x00, 0x00 ]
+		apdu.append(len(keymapEncoding))
+		apdu.extend(keymapEncoding)
+		self.dongle.exchange(bytearray(apdu))
+
 
 	def getOperationMode(self):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_OPERATION_MODE, 0x00, 0x00, 0x00]
@@ -312,6 +305,12 @@ class btchip:
 		result['compressedKeys'] = (response[0] == 0x01)
 		result['version'] = "%d.%d.%d" % (((response[1] << 8) + response[2]), response[3], response[4])
 		return result				
+
+	def getRandom(self, size):
+		if size > 255:
+			raise BTChipException("Invalid size")
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_RANDOM, 0x00, 0x00, size ]
+		return self.dongle.exchange(bytearray(apdu))
 
 	def getPOSSeedKey(self):
 		result = {}

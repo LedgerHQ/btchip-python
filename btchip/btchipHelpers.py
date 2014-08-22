@@ -69,3 +69,17 @@ def writeHexAmountBE(value, buffer):
 	buffer.append(value & 0xff)
 	return buffer
 
+def parse_bip32_path(path):
+	if len(path) == 0:
+		return bytearray([ 0 ])
+	result = []
+	elements = path.split('/')
+	if len(elements) > 10:
+		raise BTChipException("Path too long")
+	for pathElement in elements:
+		element = pathElement.split('\'')
+		if len(element) == 1:
+			writeUint32BE(int(element[0]), result)
+		else:
+			writeUint32BE(0x80000000 | int(element[0]), result)
+	return bytearray([ len(elements) ] + result)

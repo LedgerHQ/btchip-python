@@ -39,7 +39,7 @@ except:
 # Authenticate
 app.verifyPin("1234")
 # Start signing
-app.signMessagePrepare(False, 0, 0, MESSAGE)
+app.signMessagePrepare("0'/0/0", MESSAGE)
 dongle.close()
 # Wait for the second factor confirmation
 # Done on the same application for test purposes, this is typically done in another window

@@ -44,14 +44,14 @@ except:
 # Authenticate
 app.verifyPin("1234")
 # Get the public key and compress it
-publicKey = compress_public_key(app.getWalletPublicKey(False, 0, 0)['publicKey'])
+publicKey = compress_public_key(app.getWalletPublicKey("0'/0/0")['publicKey'])
 # Get the trusted input associated to the UTXO
 transaction = bitcoinTransaction(UTX)
 outputScript = transaction.outputs[UTXO_INDEX].script
 trustedInput = app.getTrustedInput(transaction, UTXO_INDEX)
 # Start composing the transaction
 app.startUntrustedTransaction(True, 0, [trustedInput], outputScript)
-outputData = app.finalizeInput(ADDRESS, AMOUNT, FEES, True, 0, 0)
+outputData = app.finalizeInput(ADDRESS, AMOUNT, FEES, "0'/1/0")
 dongle.close()
 # Wait for the second factor confirmation
 # Done on the same application for test purposes, this is typically done in another window
@@ -64,9 +64,9 @@ dongle = getDongle(True)
 app = btchip(dongle)
 # Replay the transaction, this time continue it since the second factor is ready
 app.startUntrustedTransaction(False, 0, [trustedInput], outputScript)
-app.finalizeInput(ADDRESS, "0.0009", "0.0001", True, 0, 0)
+app.finalizeInput(ADDRESS, "0.0009", "0.0001", "0'/1/0")
 # Provide the second factor to finalize the signature
-signature = app.untrustedHashSign(False, 0, 0, response[len(response) - 4:])
+signature = app.untrustedHashSign("0'/0/0", response[len(response) - 4:])
 if signature <> SIGNATURE:
 	raise BTChipException("Invalid signature")
 # Finalize the transaction - build the redeem script and put everything together

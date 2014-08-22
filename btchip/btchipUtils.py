@@ -60,4 +60,3 @@ def get_regular_input_script(sigHashtype, publicKey):
 	result.append(len(publicKey))
 	result.extend(publicKey)
 	return bytearray(result)
-

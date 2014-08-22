@@ -26,7 +26,7 @@ class Dongle(object):
 	__metaclass__ = ABCMeta
 
 	@abstractmethod
-	def exchange(self, apdu, timeout=10000):
+	def exchange(self, apdu, timeout=20000):
 		pass
 
 	@abstractmethod
@@ -43,7 +43,7 @@ class HIDDongle(Dongle):
 		except:
 			pass
 
-	def exchange(self, apdu, timeout=10000):
+	def exchange(self, apdu, timeout=20000):
 		if self.debug:
 			print "=> %s" % hexlify(apdu)
 		padSize = len(apdu) % 64
@@ -96,7 +96,7 @@ class WinUSBDongle(Dongle):
 		self.device = device
 		self.debug = debug
 
-	def exchange(self, apdu, timeout=10000):
+	def exchange(self, apdu, timeout=20000):
 		if self.debug:
 			print "=> %s" % hexlify(apdu)
 		self.device.write(0x02, apdu, 0)
