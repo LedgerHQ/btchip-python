@@ -22,6 +22,13 @@ from btchipException import *
 from binascii import hexlify
 import usb.core # using PyUSB
 
+class DongleWait(object):
+	__metaclass__ = ABCMeta
+
+	@abstractmethod
+	def waitFirstResponse(self, timeout):
+		pass
+
 class Dongle(object):
 	__metaclass__ = ABCMeta
 
@@ -33,11 +40,15 @@ class Dongle(object):
 	def close(self):
 		pass
 
-class HIDDongle(Dongle):
+	def setWaitImpl(self, waitImpl):
+		self.waitImpl = waitImpl
+
+class HIDDongle(Dongle, DongleWait):
 
 	def __init__(self, device, debug=False):
 		self.device = device
 		self.debug = debug
+		self.waitImpl = self 
 		try:
 			self.device.detach_kernel_driver(0)
 		except:
@@ -55,7 +66,7 @@ class HIDDongle(Dongle):
 			self.device.write(0x02, tmp[offset:offset + 64], 0)
 			offset += 64
 		dataLength = 0
-		result = bytearray(self.device.read(0x82, 64, 0, timeout))
+		result = self.waitImpl.waitFirstResponse(timeout) 
 		if result[0] == 0x61: # 61xx : data available
 			dataLength = result[1]
 			dataLength += 2
@@ -80,6 +91,9 @@ class HIDDongle(Dongle):
 			raise BTChipException("Invalid status %04x" % sw, sw)
 		return response
 
+	def waitFirstResponse(self, timeout):
+		return bytearray(self.device.read(0x82, 64, 0, timeout))
+
 	def close(self):
 		try:
 			self.device.attach_kernel_driver(0)
@@ -90,17 +104,18 @@ class HIDDongle(Dongle):
 		except:
 			pass
 
-class WinUSBDongle(Dongle):
+class WinUSBDongle(Dongle, DongleWait):
 
 	def __init__(self, device, debug=False):
 		self.device = device
 		self.debug = debug
+		self.waitImpl = self
 
 	def exchange(self, apdu, timeout=20000):
 		if self.debug:
 			print "=> %s" % hexlify(apdu)
 		self.device.write(0x02, apdu, 0)
-		result = bytearray(self.device.read(0x82, 260, 0, timeout))
+		result = self.waitImpl.waitFirstResponse(timeout) 
 		dataLength = 0
 		if result[0] == 0x61: # 61xx : data available
 			dataLength = result[1]
@@ -114,6 +129,9 @@ class WinUSBDongle(Dongle):
 		if sw <> 0x9000:
 			raise BTChipException("Invalid status %04x" % sw, sw)
 		return response
+
+	def waitFirstResponse(self, timeout):
+		return bytearray(self.device.read(0x82, 260, 0, timeout))
 
 	def close(self):
 		try:
