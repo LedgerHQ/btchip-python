@@ -29,15 +29,20 @@ dongle = getDongle(True)
 scriptFile = open(sys.argv[1], "r")
 line = scriptFile.readline()
 while line:	
-	if (len(line) == 0) or (line[0] == '#'):
+	if (len(line) == 0) or (line[0] == '#') or (line.find('[') >= 0) or (line.find(']') >= 0):
+		line = scriptFile.readline()
 		continue
+	line = line.replace('\"', '')
+	line = line.replace(',', '')
 	cancelResponse = (line[0] == '!')
 	timeout = 10000
 	if cancelResponse:
 		line = line[1:]
 		timeout = 1
 	try:
-		line = line.rstrip()		
+		line = line.strip()		
+		if len(line) == 0:
+			continue
 		dongle.exchange(bytearray(line.decode('hex')), timeout)
 	except:
 		if cancelResponse:
