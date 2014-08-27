@@ -72,6 +72,18 @@ class btchip:
 		apdu.extend(bytearray(pin))
 		self.dongle.exchange(bytearray(apdu))
 
+	def getVerifyPinRemainingAttempts(self):
+		# Enable when 1.4.9 is released
+		return 3
+		#apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x80, 0x00, 0x01 ]
+		#apdu.extend(bytearray("0"))
+		#try:
+		#	self.dongle.exchange(bytearray(apdu))
+		#except BTChipException, e:
+		#	if ((e.sw & 0xfff0) == 0x63c0):
+		#		return e.sw - 0x63c0
+		#	raise e
+
 	def getWalletPublicKey(self, path):
 		result = {}
 		donglePath = parse_bip32_path(path)
@@ -226,7 +238,7 @@ class btchip:
 		result['confirmationNeeded'] = response[0] == 0x01
 		return result
 
-	def signMessageSign(self, pin=None):
+	def signMessageSign(self, pin=""):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGN_MESSAGE, 0x80, 0x00 ]
 		params = []
 		if pin is not None:
@@ -285,7 +297,7 @@ class btchip:
 	def setOperationMode(self, operationMode):
 		if operationMode <> btchip.OPERATION_MODE_WALLET \
 			and operationMode <> btchip.OPERATION_MODE_RELAXED_WALLET \
-			and operationmdoe <> btchip.OPERATION_MODE_SERVER \
+			and operationMode <> btchip.OPERATION_MODE_SERVER \
 			and operationMode <> btchip.OPERATION_MODE_DEVELOPER:
 			raise BTChipException("Invalid operation mode")			
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_OPERATION_MODE, 0x00, 0x00, 0x01, operationMode ]
