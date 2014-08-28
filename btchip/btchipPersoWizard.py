@@ -47,7 +47,6 @@ import ui.personalizationseedbackup04
 
 def waitDongle(currentDialog, persoData):
 	try:
-		print "waitDongle"
 		if persoData['client'] <> None:
 			try:
 				persoData['client'].dongle.close()
@@ -61,8 +60,11 @@ def waitDongle(currentDialog, persoData):
 		if e.sw == 0x6faa:
 			QMessageBox.information(currentDialog, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")									
 			return False		
+		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found. Retry ?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
+			return False
+		else:
+			raise Exception("Aborted by user")
 	except Exception,e:
-		print e
 		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found. Retry ?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
 			return False
 		else:
@@ -192,10 +194,8 @@ class ConfigDialog(QtGui.QDialog):
 			while not waitDongle(self, self.persoData):
 				pass
 		except Exception, e:
-			print e
 			self.reject()
 			self.persoData['main'].reject()
-		print self.persoData
 		mode = btchip.OPERATION_MODE_WALLET
 		if not self.persoData['hardened']:
 			mode = mode | btchip.OPERATION_MODE_SERVER
@@ -235,7 +235,6 @@ class FinalizeDialog(QtGui.QDialog):
 			while not waitDongle(self, self.persoData):
 				pass
 		except Exception, e:
-			print e
 			self.reject()
 			self.persoData['main'].reject()
 		attempts = self.persoData['client'].getVerifyPinRemainingAttempts()
@@ -249,13 +248,6 @@ class FinalizeDialog(QtGui.QDialog):
 			QMessageBox.warning(self, "Error", "PIN is too long", "OK")
 			return	
 		try:
-			while not waitDongle(self, self.persoData):
-				pass
-		except Exception, e:
-			print e
-			self.reject()
-			self.persoData['main'].reject()
-		try:
 			self.persoData['client'].verifyPin(str(self.ui.pin1.text()))
 		except BTChipException, e:
 			if ((e.sw == 0x63c0) or (e.sw == 0x6985)):
@@ -265,10 +257,18 @@ class FinalizeDialog(QtGui.QDialog):
 			if ((e.sw & 0xfff0) == 0x63c0):
 				attempts = e.sw - 0x63c0
 				self.ui.remainingAttemptsLabel.setText("Remaining attempts " + str(attempts))		
-			QMessageBox.warning(self, "Error", "Invalid PIN", "OK")				
+			QMessageBox.warning(self, "Error", "Invalid PIN - please unplug the dongle and plug it again before retrying", "OK")				
+			try:
+				while not waitDongle(self, self.persoData):
+					pass
+			except Exception, e:
+				self.reject()
+				self.persoData['main'].reject()
 			return			
 		except Exception, e:				
-			QMessageBox.warning(self, "Error", "Error verifying PIN", "OK")
+			QMessageBox.warning(self, "Error", "Unexpected error verifying PIN  - aborting", "OK")			
+			self.reject()
+			self.persoData['main'].reject()			
 			return
 		if not self.persoData['hardened']:
 			try:
@@ -358,7 +358,6 @@ class SeedBackupVerify(QtGui.QDialog):
 					QMessageBox.information(self, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")									
 					pass
 			except Exception, e:
-				print e
 				pass
 		self.reject()
 		self.persoData['main'].reject()
