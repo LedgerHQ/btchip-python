@@ -162,10 +162,10 @@
   <widget class="QLabel" name="IntroLabel_5">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>370</y>
-     <width>121</width>
-     <height>21</height>
+     <x>20</x>
+     <y>380</y>
+     <width>161</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -178,14 +178,11 @@
   <widget class="QLineEdit" name="pin1">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>370</y>
-     <width>221</width>
+     <x>210</x>
+     <y>380</y>
+     <width>161</width>
      <height>21</height>
     </rect>
-   </property>
-   <property name="text">
-    <string>1234</string>
    </property>
    <property name="echoMode">
     <enum>QLineEdit::Password</enum>
@@ -194,14 +191,11 @@
   <widget class="QLineEdit" name="pin2">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>400</y>
-     <width>221</width>
+     <x>210</x>
+     <y>420</y>
+     <width>161</width>
      <height>21</height>
     </rect>
-   </property>
-   <property name="text">
-    <string>1234</string>
    </property>
    <property name="echoMode">
     <enum>QLineEdit::Password</enum>
@@ -210,10 +204,10 @@
   <widget class="QLabel" name="IntroLabel_6">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>400</y>
-     <width>121</width>
-     <height>21</height>
+     <x>20</x>
+     <y>420</y>
+     <width>171</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>554</width>
     <height>190</height>
    </rect>
   </property>
@@ -53,9 +53,9 @@
   <widget class="QPushButton" name="seedOkButton">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>20</x>
      <y>140</y>
-     <width>391</width>
+     <width>501</width>
      <height>25</height>
     </rect>
    </property>
@@ -66,9 +66,9 @@
   <widget class="QPushButton" name="seedKoButton">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>20</x>
      <y>110</y>
-     <width>391</width>
+     <width>501</width>
      <height>25</height>
     </rect>
    </property>

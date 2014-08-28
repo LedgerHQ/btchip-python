@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'personalization-00-start.ui'
 #
-# Created: Wed Aug 27 21:28:47 2014
+# Created: Thu Aug 28 22:26:21 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,7 +35,7 @@ class Ui_Dialog(object):
         self.NextButton.setGeometry(QtCore.QRect(310, 200, 75, 25))
         self.NextButton.setObjectName(_fromUtf8("NextButton"))
         self.arningLabel = QtGui.QLabel(Dialog)
-        self.arningLabel.setGeometry(QtCore.QRect(20, 120, 351, 61))
+        self.arningLabel.setGeometry(QtCore.QRect(20, 120, 351, 81))
         self.arningLabel.setWordWrap(True)
         self.arningLabel.setObjectName(_fromUtf8("arningLabel"))
         self.CancelButton = QtGui.QPushButton(Dialog)

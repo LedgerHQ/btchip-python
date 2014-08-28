@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'personalization-02-security.ui'
 #
-# Created: Wed Aug 27 21:28:47 2014
+# Created: Thu Aug 28 22:26:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -61,19 +61,19 @@ class Ui_Dialog(object):
         self.IntroLabel_4.setWordWrap(True)
         self.IntroLabel_4.setObjectName(_fromUtf8("IntroLabel_4"))
         self.IntroLabel_5 = QtGui.QLabel(Dialog)
-        self.IntroLabel_5.setGeometry(QtCore.QRect(50, 370, 121, 21))
+        self.IntroLabel_5.setGeometry(QtCore.QRect(20, 380, 161, 31))
         self.IntroLabel_5.setWordWrap(True)
         self.IntroLabel_5.setObjectName(_fromUtf8("IntroLabel_5"))
         self.pin1 = QtGui.QLineEdit(Dialog)
-        self.pin1.setGeometry(QtCore.QRect(160, 370, 221, 21))
+        self.pin1.setGeometry(QtCore.QRect(210, 380, 161, 21))
         self.pin1.setEchoMode(QtGui.QLineEdit.Password)
         self.pin1.setObjectName(_fromUtf8("pin1"))
         self.pin2 = QtGui.QLineEdit(Dialog)
-        self.pin2.setGeometry(QtCore.QRect(160, 400, 221, 21))
+        self.pin2.setGeometry(QtCore.QRect(210, 420, 161, 21))
         self.pin2.setEchoMode(QtGui.QLineEdit.Password)
         self.pin2.setObjectName(_fromUtf8("pin2"))
         self.IntroLabel_6 = QtGui.QLabel(Dialog)
-        self.IntroLabel_6.setGeometry(QtCore.QRect(40, 400, 121, 21))
+        self.IntroLabel_6.setGeometry(QtCore.QRect(20, 420, 171, 31))
         self.IntroLabel_6.setWordWrap(True)
         self.IntroLabel_6.setObjectName(_fromUtf8("IntroLabel_6"))
 
@@ -92,7 +92,5 @@ class Ui_Dialog(object):
         self.NextButton.setText(QtGui.QApplication.translate("Dialog", "Next", None, QtGui.QApplication.UnicodeUTF8))
         self.IntroLabel_4.setText(QtGui.QApplication.translate("Dialog", "Please choose a PIN associated to the BTChip dongle. The PIN protects the dongle in case it is stolen, and can be up to 32 characters. The dongle is wiped  if a wrong PIN is entered 3 times in a row.", None, QtGui.QApplication.UnicodeUTF8))
         self.IntroLabel_5.setText(QtGui.QApplication.translate("Dialog", "Enter the new PIN : ", None, QtGui.QApplication.UnicodeUTF8))
-        self.pin1.setText(QtGui.QApplication.translate("Dialog", "1234", None, QtGui.QApplication.UnicodeUTF8))
-        self.pin2.setText(QtGui.QApplication.translate("Dialog", "1234", None, QtGui.QApplication.UnicodeUTF8))
         self.IntroLabel_6.setText(QtGui.QApplication.translate("Dialog", "Repeat the new PIN :", None, QtGui.QApplication.UnicodeUTF8))
 

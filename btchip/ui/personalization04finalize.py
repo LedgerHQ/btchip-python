@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'personalization-04-finalize.ui'
 #
-# Created: Wed Aug 27 21:28:47 2014
+# Created: Thu Aug 28 22:26:22 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -39,7 +39,7 @@ class Ui_Dialog(object):
         self.IntroLabel_5.setWordWrap(True)
         self.IntroLabel_5.setObjectName(_fromUtf8("IntroLabel_5"))
         self.pin1 = QtGui.QLineEdit(Dialog)
-        self.pin1.setGeometry(QtCore.QRect(120, 140, 221, 21))
+        self.pin1.setGeometry(QtCore.QRect(200, 140, 181, 21))
         self.pin1.setEchoMode(QtGui.QLineEdit.Password)
         self.pin1.setObjectName(_fromUtf8("pin1"))
         self.remainingAttemptsLabel = QtGui.QLabel(Dialog)

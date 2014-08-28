@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>418</height>
+    <height>513</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,10 +37,10 @@
   <widget class="QLabel" name="IntroLabel">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>20</x>
      <y>50</y>
      <width>351</width>
-     <height>51</height>
+     <height>61</height>
     </rect>
    </property>
    <property name="text">
@@ -53,10 +53,10 @@
   <widget class="QLabel" name="IntroLabel_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>100</y>
+     <x>20</x>
+     <y>120</y>
      <width>351</width>
-     <height>51</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -69,14 +69,14 @@
   <widget class="QLabel" name="IntroLabel_3">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>140</y>
+     <x>20</x>
+     <y>160</y>
      <width>351</width>
      <height>51</height>
     </rect>
    </property>
    <property name="text">
-    <string>After a very short time, the dongle will type the seed as hexadecimal (0..9 A..F) characters, starting with &quot;seed&quot; and ending with &quot;####&quot;</string>
+    <string>After a very short time, the dongle will type the seed as hexadecimal (0..9 A..F) characters, starting with &quot;seed&quot; and ending with &quot;X&quot;</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -85,8 +85,8 @@
   <widget class="QLabel" name="IntroLabel_4">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>190</y>
+     <x>20</x>
+     <y>220</y>
      <width>351</width>
      <height>51</height>
     </rect>
@@ -101,10 +101,10 @@
   <widget class="QLabel" name="IntroLabel_5">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>240</y>
+     <x>20</x>
+     <y>280</y>
      <width>351</width>
-     <height>51</height>
+     <height>71</height>
     </rect>
    </property>
    <property name="text">
@@ -117,8 +117,8 @@
   <widget class="QLabel" name="IntroLabel_6">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>290</y>
+     <x>20</x>
+     <y>350</y>
      <width>351</width>
      <height>51</height>
     </rect>
@@ -133,8 +133,8 @@
   <widget class="QLabel" name="IntroLabel_7">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>330</y>
+     <x>20</x>
+     <y>410</y>
      <width>351</width>
      <height>51</height>
     </rect>
@@ -150,7 +150,7 @@
    <property name="geometry">
     <rect>
      <x>310</x>
-     <y>380</y>
+     <y>480</y>
      <width>75</width>
      <height>25</height>
     </rect>

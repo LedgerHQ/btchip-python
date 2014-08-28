@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'personalization-seedbackup-04.ui'
 #
-# Created: Wed Aug 27 21:28:48 2014
+# Created: Thu Aug 28 22:26:23 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(400, 190)
+        Dialog.resize(554, 190)
         self.TitleLabel = QtGui.QLabel(Dialog)
         self.TitleLabel.setGeometry(QtCore.QRect(30, 10, 351, 31))
         font = QtGui.QFont()
@@ -32,10 +32,10 @@ class Ui_Dialog(object):
         self.IntroLabel.setWordWrap(True)
         self.IntroLabel.setObjectName(_fromUtf8("IntroLabel"))
         self.seedOkButton = QtGui.QPushButton(Dialog)
-        self.seedOkButton.setGeometry(QtCore.QRect(0, 140, 391, 25))
+        self.seedOkButton.setGeometry(QtCore.QRect(20, 140, 501, 25))
         self.seedOkButton.setObjectName(_fromUtf8("seedOkButton"))
         self.seedKoButton = QtGui.QPushButton(Dialog)
-        self.seedKoButton.setGeometry(QtCore.QRect(0, 110, 391, 25))
+        self.seedKoButton.setGeometry(QtCore.QRect(20, 110, 501, 25))
         self.seedKoButton.setObjectName(_fromUtf8("seedKoButton"))
 
         self.retranslateUi(Dialog)
