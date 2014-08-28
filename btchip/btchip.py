@@ -73,16 +73,14 @@ class btchip:
 		self.dongle.exchange(bytearray(apdu))
 
 	def getVerifyPinRemainingAttempts(self):
-		# Enable when 1.4.9 is released
-		return 3
-		#apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x80, 0x00, 0x01 ]
-		#apdu.extend(bytearray("0"))
-		#try:
-		#	self.dongle.exchange(bytearray(apdu))
-		#except BTChipException, e:
-		#	if ((e.sw & 0xfff0) == 0x63c0):
-		#		return e.sw - 0x63c0
-		#	raise e
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x80, 0x00, 0x01 ]
+		apdu.extend(bytearray("0"))
+		try:
+			self.dongle.exchange(bytearray(apdu))
+		except BTChipException, e:
+			if ((e.sw & 0xfff0) == 0x63c0):
+				return e.sw - 0x63c0
+			raise e
 
 	def getWalletPublicKey(self, path):
 		result = {}
