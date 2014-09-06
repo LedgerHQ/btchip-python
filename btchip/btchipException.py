@@ -19,7 +19,7 @@
 
 class BTChipException(Exception):
 
-	def __init__(self, message, sw=None):
+	def __init__(self, message, sw=0x6f00):
 		self.message = message
 		self.sw = sw
 
