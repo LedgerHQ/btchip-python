@@ -220,6 +220,7 @@ class btchip:
 		apdu.append(len(params))
 		apdu.extend(params)
 		result = self.dongle.exchange(bytearray(apdu))		
+		result[0] = 0x30
 		return result
 
 	def signMessagePrepare(self, path, message):
