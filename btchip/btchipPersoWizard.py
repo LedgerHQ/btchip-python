@@ -187,7 +187,7 @@ class ConfigDialog(QtGui.QDialog):
 		if (self.ui.qwertyButton.isChecked()):
 			self.persoData['keyboard'] = btchip.QWERTY_KEYMAP
 		elif (self.ui.qwertzButton.isChecked()):
-			self.persoData['keyboard'] = btchip.QWERTY_KEYMAP #FIXME
+			self.persoData['keyboard'] = btchip.QWERTZ_KEYMAP 
 		elif (self.ui.azertyButton.isChecked()):
 			self.persoData['keyboard'] = btchip.AZERTY_KEYMAP
 		try:
