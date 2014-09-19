@@ -17,5 +17,8 @@
 ********************************************************************************
 """
 
+def checkFirmware(version):
+	return True
+
 def updateFirmware():
 	raise Exception("Unsupported BTChip firmware - please update your firmware from https://firmwareupdate.hardwarewallet.com")
