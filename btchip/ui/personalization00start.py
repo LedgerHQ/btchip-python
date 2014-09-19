@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'personalization-00-start.ui'
 #
-# Created: Thu Aug 28 22:26:21 2014
+# Created: Fri Sep 19 15:03:25 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -19,7 +19,7 @@ class Ui_Dialog(object):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(400, 231)
         self.TitleLabel = QtGui.QLabel(Dialog)
-        self.TitleLabel.setGeometry(QtCore.QRect(120, 20, 191, 31))
+        self.TitleLabel.setGeometry(QtCore.QRect(120, 20, 231, 31))
         font = QtGui.QFont()
         font.setPointSize(20)
         font.setBold(True)
