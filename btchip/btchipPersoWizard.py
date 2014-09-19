@@ -60,12 +60,12 @@ def waitDongle(currentDialog, persoData):
 		if e.sw == 0x6faa:
 			QMessageBox.information(currentDialog, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")									
 			return False		
-		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found. Retry ?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
+		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found.  It might be in the wrong mode. Try unplugging und plugging it back in again, then press 'OK'", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
 			return False
 		else:
 			raise Exception("Aborted by user")
 	except Exception,e:
-		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found. Retry ?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
+		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found.  It might be in the wrong mode. Try unplugging und plugging it back in again, then press 'OK'", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
 			return False
 		else:
 			raise Exception("Aborted by user")
