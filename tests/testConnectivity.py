@@ -29,9 +29,6 @@ print('btchip firmware version:')
 print(app.getFirmwareVersion())
 
 print('some random number from the dongle:')
-print(app.getRandom(200))
-
-print('btchip POS seed:')
-print(app.getPOSSeedKey())
+print(map(hex, app.getRandom(20)))
 
 dongle.close()
