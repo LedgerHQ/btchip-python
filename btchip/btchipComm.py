@@ -77,7 +77,7 @@ class HIDDongle(Dongle, DongleWait):
 						blockLength = 64
 					else:
 						blockLength = remaining
-					result.extend(bytearray(self.device.read(0x82, 64, 0, timeout))[0:blockLength])
+					result.extend(bytearray(self.device.read(0x82, 64, timeout))[0:blockLength])
 					remaining -= blockLength
 			swOffset = dataLength
 			dataLength -= 2
@@ -92,7 +92,7 @@ class HIDDongle(Dongle, DongleWait):
 		return response
 
 	def waitFirstResponse(self, timeout):
-		return bytearray(self.device.read(0x82, 64, 0, timeout))
+		return bytearray(self.device.read(0x82, 64, timeout))
 
 	def close(self):
 		try:
@@ -131,7 +131,7 @@ class WinUSBDongle(Dongle, DongleWait):
 		return response
 
 	def waitFirstResponse(self, timeout):
-		return bytearray(self.device.read(0x82, 260, 0, timeout))
+		return bytearray(self.device.read(0x82, 260, timeout))
 
 	def close(self):
 		try:
