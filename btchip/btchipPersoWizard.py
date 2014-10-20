@@ -116,6 +116,11 @@ class SeedDialog(QtGui.QDialog):
 		if self.ui.RestoreWalletButton.isChecked():
 			# Check if it's an hexa string			
 			seedText = str(self.ui.seed.text())
+			if len(seedText) == 0:
+				QMessageBox.warning(self, "Error", "Please enter a seed", "OK")
+				return	
+			if seedText[len(seedText) - 1] == 'X':
+				seedText = seedText[0:len(seedText) - 1]
 			try:
 				self.persoData['seed'] = seedText.decode('hex')
 			except:
