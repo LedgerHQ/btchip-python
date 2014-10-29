@@ -7,13 +7,16 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='btchip-python',
-    version='0.1.7',
+    version='0.1.8',
     author='BTChip',
     author_email='contact@btchip.com',
     description='Python library to communicate with BTChip dongle',
     long_description=open(join(here, 'README.md')).read(),
     packages=find_packages(),
-    install_requires=['pyusb>=1.0.0rc1'],
+    install_requires=['hidapi>=0.7.99'],
+    extras_require = {
+	'winusb': ['pyusb>=1.0.0rc1']
+    },
     include_package_data=True,
     zip_safe=False,
     classifiers=[

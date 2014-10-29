@@ -20,7 +20,15 @@
 from abc import ABCMeta, abstractmethod
 from btchipException import *
 from binascii import hexlify
-import usb.core # using PyUSB
+import hid
+import time
+
+try:
+	import usb.core # using PyUSB
+	WINUSB = True
+except ImportError:
+	WINUSB = False
+
 
 class DongleWait(object):
 	__metaclass__ = ABCMeta
@@ -139,17 +147,91 @@ class WinUSBDongle(Dongle, DongleWait):
 		except:
 			pass
 
+class HIDDongleHIDAPI(Dongle, DongleWait):
+
+	def __init__(self, device, debug=False):
+		self.device = device
+		self.debug = debug
+		self.waitImpl = self 
+
+	def exchange(self, apdu, timeout=20000):
+		if self.debug:
+			print "=> %s" % hexlify(apdu)
+		padSize = len(apdu) % 64
+		tmp = apdu
+		if padSize <> 0:
+			tmp.extend([0] * (64 - padSize))		
+		offset = 0
+		while(offset <> len(tmp)):
+			self.device.write(tmp[offset:offset + 64])
+			offset += 64
+		dataLength = 0
+		result = self.waitImpl.waitFirstResponse(timeout) 
+		if result[0] == 0x61: # 61xx : data available
+			dataLength = result[1]
+			dataLength += 2
+			if dataLength > 62:
+				remaining = dataLength - 62
+				while(remaining != 0):
+					if remaining > 64:
+						blockLength = 64
+					else:
+						blockLength = remaining
+					result.extend(bytearray(self.device.read(65))[0:blockLength])
+					remaining -= blockLength
+			swOffset = dataLength
+			dataLength -= 2
+		else:
+			swOffset = 0
+		sw = (result[swOffset] << 8) + result[swOffset + 1]
+		response = result[2 : dataLength + 2]
+		if self.debug:
+			print "<= %s%.2x" % (hexlify(response), sw)		
+		if sw <> 0x9000:
+			raise BTChipException("Invalid status %04x" % sw, sw)
+		return response
+
+	def waitFirstResponse(self, timeout):
+		start = time.time()
+		data = ""
+		while len(data) == 0:
+			data = self.device.read(65)
+			if not len(data):
+				if time.time() - start > timeout:
+					raise BTChipException("Timeout")
+				time.sleep(0.02)				
+		return bytearray(data)
+
+	def close(self):
+		try:
+			self.device.close()
+		except:
+			pass
+
 def getDongle(debug=False):
-	dev = usb.core.find(idVendor=0x2581, idProduct=0x1b7c) # core application, WinUSB
-	if dev is not None:
-		return WinUSBDongle(dev, debug)	
-	dev = usb.core.find(idVendor=0x2581, idProduct=0x1808) # bootloader, WinUSB
-	if dev is not None:
-		return WinUSBDongle(dev, debug)	
-	dev = usb.core.find(idVendor=0x2581, idProduct=0x2b7c) # core application, Generic HID
-	if dev is not None:
-		return HIDDongle(dev, debug)
-	dev = usb.core.find(idVendor=0x2581, idProduct=0x1807) # bootloader, Generic HID
-	if dev is not None:
-		return HIDDongle(dev, debug)
+	dev = None
+	hidDevicePath = None
+	for hidDevice in hid.enumerate(0, 0):
+		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x2b7c:
+			hidDevicePath = hidDevice['path']
+		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x1807:
+			hidDevicePath = hidDevice['path']		
+	if hidDevicePath is not None:
+		dev = hid.device()
+		dev.open_path(hidDevicePath)
+		dev.set_nonblocking(True)
+		return HIDDongleHIDAPI(dev, debug)				
+	if WINUSB:	
+		dev = usb.core.find(idVendor=0x2581, idProduct=0x1b7c) # core application, WinUSB
+		if dev is not None:
+			return WinUSBDongle(dev, debug)	
+		dev = usb.core.find(idVendor=0x2581, idProduct=0x1808) # bootloader, WinUSB
+		if dev is not None:
+			return WinUSBDongle(dev, debug)	
+		dev = usb.core.find(idVendor=0x2581, idProduct=0x2b7c) # core application, Generic HID
+		if dev is not None:
+			return HIDDongle(dev, debug)
+		dev = usb.core.find(idVendor=0x2581, idProduct=0x1807) # bootloader, Generic HID
+		if dev is not None:
+			return HIDDongle(dev, debug)
 	raise BTChipException("No dongle found")
