@@ -60,3 +60,36 @@ def get_regular_input_script(sigHashtype, publicKey):
 	result.append(len(publicKey))
 	result.extend(publicKey)
 	return bytearray(result)
+
+def write_pushed_data_size(data, buffer):
+	if (len(data) > 0xffff):
+		raise BTChipException("unsupported encoding")
+        if (len(data) < 0x4c):
+		buffer.append(len(data))
+        elif (len(data) > 255):
+                buffer.append(0x4d)
+                buffer.append(len(data) & 0xff)
+                buffer.append((len(data) >> 8) & 0xff)
+        else:
+                buffer.append(0x4c)
+		buffer.append(len(data))
+        return buffer
+
+
+def get_p2sh_input_script(redeemScript, sigHashtypeList):
+	result = [ 0x00 ]
+	for sigHashtype in sigHashtypeList:
+		write_pushed_data_size(sigHashtype, result)
+		result.extend(sigHashtype)
+	write_pushed_data_size(redeemScript, result)
+	result.extend(redeemScript)
+	return bytearray(result)
+	
+def get_output_script(amountScriptArray):
+	result = [ len(amountScriptArray) ]
+	for amountScript in amountScriptArray:
+		writeHexAmount(btc_to_satoshi(str(amountScript[0])), result)
+		writeVarint(len(amountScript[1]), result)
+		result.extend(amountScript[1])
+	return bytearray(result)
+
