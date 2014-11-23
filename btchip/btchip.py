@@ -196,11 +196,11 @@ class btchip:
 		offset = 0
 		while (offset < len(outputData)):
 			blockLength = 255
-			if ((offset + blockLength) > len(outputData)):
-				dataLength = len(outputData) - offset
+			if ((offset + blockLength) < len(outputData)):
+				dataLength = blockLength
 				p1 = 0x00
 			else:
-				dataLength = blockLength
+				dataLength = len(outputData) - offset
 				p1 = 0x80
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, \
 			p1, 0x00, dataLength ]
