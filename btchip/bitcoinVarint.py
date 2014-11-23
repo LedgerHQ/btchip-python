@@ -32,7 +32,7 @@ def readVarint(buffer, offset):
 		value = (buffer[offset + 4] << 24) | (buffer[offset + 3] << 16) | (buffer[offset + 2] << 8) | (buffer[offset + 1])
 		varintSize = 5
 	else:
-			raise BTChipException("unsupported varint")
+		raise BTChipException("unsupported varint")
 	return { "value": value, "size": varintSize }
 
 def writeVarint(value, buffer):
