@@ -168,6 +168,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		dataLength = 0
 		result = self.waitImpl.waitFirstResponse(timeout) 
 		if result[0] == 0x61: # 61xx : data available
+			self.device.set_nonblocking(False)
 			dataLength = result[1]
 			dataLength += 2
 			if dataLength > 62:
@@ -181,6 +182,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 					remaining -= blockLength
 			swOffset = dataLength
 			dataLength -= 2
+			self.device.set_nonblocking(True)
 		else:
 			swOffset = 0
 		sw = (result[swOffset] << 8) + result[swOffset + 1]
