@@ -153,7 +153,7 @@ class btchip:
 		apdu.extend(params)
 		self.dongle.exchange(bytearray(apdu))
 		# Loop for each input
-		currentIndex = 0;		
+		currentIndex = 0		
 		for passedOutput in outputList:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00 ]	
 			params = []
@@ -334,3 +334,53 @@ class btchip:
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_POS_SEED, 0x02, 0x00, 0x00 ]
 		return self.dongle.exchange(bytearray(apdu))
+
+	def importPrivateKey(self, data, isSeed=False):
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_IMPORT_PRIVATE_KEY, (0x02 if isSeed else 0x01), 0x00 ]
+                apdu.append(len(data))
+                apdu.extend(data)
+                return self.dongle.exchange(bytearray(apdu))
+
+	def getPublicKey(self, encodedPrivateKey):
+		result = {}
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_PUBLIC_KEY, 0x00, 0x00 ]
+		apdu.append(len(encodedPrivateKey) + 1)
+		apdu.append(len(encodedPrivateKey))
+		apdu.extend(encodedPrivateKey)
+		response = self.dongle.exchange(bytearray(apdu))
+                offset = 1 
+                result['publicKey'] = response[offset + 1 : offset + 1 + response[offset]]
+                offset = offset + 1 + response[offset]
+		if response[0] == 0x02: 
+			result['chainCode'] = response[offset : offset + 32]
+			offset = offset + 32
+			result['depth'] = response[offset]
+			offset = offset + 1
+			result['parentFingerprint'] = response[offset : offset + 4]
+			offset = offset + 4
+			result['childNumber'] = response[offset : offset + 4]
+		return result
+
+	def deriveBip32Key(self, encodedPrivateKey, path):
+		donglePath = parse_bip32_path(path)
+		offset = 1
+		currentEncodedPrivateKey = encodedPrivateKey
+		while (offset < len(donglePath)):
+			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_DERIVE_BIP32_KEY, 0x00, 0x00 ]
+			apdu.append(len(currentEncodedPrivateKey) + 1 + 4)
+			apdu.append(len(currentEncodedPrivateKey))
+			apdu.extend(currentEncodedPrivateKey)
+			apdu.extend(donglePath[offset : offset + 4])
+			currentEncodedPrivateKey = self.dongle.exchange(bytearray(apdu))
+			offset = offset + 4
+		return currentEncodedPrivateKey
+
+	def signImmediate(self, encodedPrivateKey, data, deterministic=True):
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGNVERIFY_IMMEDIATE, 0x00, (0x80 if deterministic else 0x00) ]
+		apdu.append(len(encodedPrivateKey) + len(data) + 2);
+		apdu.append(len(encodedPrivateKey))
+		apdu.extend(encodedPrivateKey)
+		apdu.append(len(data))
+		apdu.extend(data)
+		return self.dongle.exchange(bytearray(apdu))
+
