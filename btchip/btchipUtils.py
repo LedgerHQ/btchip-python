@@ -1,8 +1,8 @@
 """
-*******************************************************************************    
+*******************************************************************************
 *   BTChip Bitcoin Hardware Wallet Python API
 *   (c) 2014 BTChip - 1BTChip7VfTnrPra5jqci7ejnMguuHogTn
-*   
+*
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
 *  You may obtain a copy of the License at
@@ -54,7 +54,7 @@ def get_regular_input_script(sigHashtype, publicKey):
 	if len(sigHashtype) >= 0x4c:
 		raise BTChipException("Invalid sigHashtype")
 	if len(publicKey) >= 0x4c:
-		raise BTChipException("Invalid publicKey")	
+		raise BTChipException("Invalid publicKey")
 	result = [ len(sigHashtype) ]
 	result.extend(sigHashtype)
 	result.append(len(publicKey))
@@ -84,7 +84,7 @@ def get_p2sh_input_script(redeemScript, sigHashtypeList):
 	write_pushed_data_size(redeemScript, result)
 	result.extend(redeemScript)
 	return bytearray(result)
-	
+
 def get_output_script(amountScriptArray):
 	result = [ len(amountScriptArray) ]
 	for amountScript in amountScriptArray:

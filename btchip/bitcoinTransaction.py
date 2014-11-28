@@ -1,8 +1,8 @@
 """
-*******************************************************************************    
+*******************************************************************************
 *   BTChip Bitcoin Hardware Wallet Python API
 *   (c) 2014 BTChip - 1BTChip7VfTnrPra5jqci7ejnMguuHogTn
-*   
+*
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
 *  You may obtain a copy of the License at
@@ -35,7 +35,7 @@ class bitcoinInput:
 			offset += scriptSize['size']
 			self.script = buf[offset:offset + scriptSize['value']]
 			offset += scriptSize['value']
-			self.sequence = buf[offset:offset + 4]			
+			self.sequence = buf[offset:offset + 4]
 			offset += 4
 			bufferOffset['offset'] = offset
 
@@ -51,13 +51,13 @@ class bitcoinInput:
 		buf =  "Prevout : " + hexlify(self.prevOut) + "\r\n"
 		buf += "Script : " + hexlify(self.script) + "\r\n"
 		buf += "Sequence : " + hexlify(self.sequence) + "\r\n"
-		return buf		
+		return buf
 
 class bitcoinOutput:
 
 	def __init__(self, bufferOffset=None):
 		self.amount = ""
-		self.script = ""		
+		self.script = ""
 		if bufferOffset is not None:
 			buf = bufferOffset['buffer']
 			offset = bufferOffset['offset']
@@ -79,7 +79,7 @@ class bitcoinOutput:
 	def __str__(self):
 		buf =  "Amount : " + hexlify(self.amount) + "\r\n"
 		buf += "Script : " + hexlify(self.script) + "\r\n"
-		return buf		
+		return buf
 
 
 class bitcoinTransaction:
@@ -101,7 +101,7 @@ class bitcoinTransaction:
 				self.inputs.append(bitcoinInput(tmp))
 				offset = tmp['offset']
 			outputSize = readVarint(data, offset)
-			offset += outputSize['size']				
+			offset += outputSize['size']
 			numOutputs = outputSize['value']
 			for i in range(numOutputs):
 				tmp = { 'buffer': data, 'offset' : offset}
@@ -135,4 +135,4 @@ class bitcoinTransaction:
 			buf += str(troutput)
 			index+=1
 		buf += "Locktime : " + hexlify(self.lockTime) + "\r\n"
-		return buf		
+		return buf
