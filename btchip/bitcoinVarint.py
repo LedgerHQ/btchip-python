@@ -1,8 +1,8 @@
 """
-*******************************************************************************    
+*******************************************************************************
 *   BTChip Bitcoin Hardware Wallet Python API
 *   (c) 2014 BTChip - 1BTChip7VfTnrPra5jqci7ejnMguuHogTn
-*   
+*
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
 *  You may obtain a copy of the License at
@@ -48,7 +48,7 @@ def writeVarint(value, buffer):
 		buffer.append((value >> 8) & 0xff)
 		buffer.append((value >> 16) & 0xff)
 		buffer.append((value >> 24) & 0xff)
-	else:		
+	else:
 		raise BTChipException("unsupported encoding")
 	return buffer
 

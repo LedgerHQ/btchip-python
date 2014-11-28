@@ -1,8 +1,8 @@
 """
-*******************************************************************************    
+*******************************************************************************
 *   BTChip Bitcoin Hardware Wallet Python API
 *   (c) 2014 BTChip - 1BTChip7VfTnrPra5jqci7ejnMguuHogTn
-*   
+*
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
 *  You may obtain a copy of the License at
@@ -58,8 +58,8 @@ def waitDongle(currentDialog, persoData):
 		return True
 	except BTChipException,e:
 		if e.sw == 0x6faa:
-			QMessageBox.information(currentDialog, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")									
-			return False		
+			QMessageBox.information(currentDialog, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")
+			return False
 		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found.  It might be in the wrong mode. Try unplugging und plugging it back in again, then press 'OK'", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
 			return False
 		else:
@@ -114,13 +114,13 @@ class SeedDialog(QtGui.QDialog):
 	def processNext(self):
 		self.persoData['seed'] = None
 		if self.ui.RestoreWalletButton.isChecked():
-			# Check if it's an hexa string			
+			# Check if it's an hexa string
 			seedText = str(self.ui.seed.text())
 			if len(seedText) == 0:
 				QMessageBox.warning(self, "Error", "Please enter a seed", "OK")
-				return	
-			if seedText[len(seedText) - 1] == 'X':
-				seedText = seedText[0:len(seedText) - 1]
+				return
+			if seedText[-1] == 'X':
+				seedText = seedText[0:-1]
 			try:
 				self.persoData['seed'] = seedText.decode('hex')
 			except:
@@ -149,14 +149,14 @@ class SecurityDialog(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalization02security.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.NextButton.clicked.connect(self.processNext)
 		self.ui.CancelButton.clicked.connect(self.processCancel)
-	
 
-	def processNext(self):		
+
+	def processNext(self):
 		if (self.ui.pin1.text() <> self.ui.pin2.text()):
 			self.ui.pin1.setText("")
 			self.ui.pin2.setText("")
@@ -164,10 +164,10 @@ class SecurityDialog(QtGui.QDialog):
 			return
 		if (len(self.ui.pin1.text()) < 4):
 			QMessageBox.warning(self, "Error", "PIN must be at least 4 characteres long", "OK")
-			return					
+			return
 		if (len(self.ui.pin1.text()) > 32):
 			QMessageBox.warning(self, "Error", "PIN is too long", "OK")
-			return	
+			return
 		self.persoData['pin'] = str(self.ui.pin1.text())
 		self.persoData['hardened'] = self.ui.HardenedButton.isChecked()
 		dialog = ConfigDialog(self.persoData, self)
@@ -187,12 +187,12 @@ class ConfigDialog(QtGui.QDialog):
 		self.ui.setupUi(self)
 		self.ui.NextButton.clicked.connect(self.processNext)
 		self.ui.CancelButton.clicked.connect(self.processCancel)
-	
+
 	def processNext(self):
 		if (self.ui.qwertyButton.isChecked()):
 			self.persoData['keyboard'] = btchip.QWERTY_KEYMAP
 		elif (self.ui.qwertzButton.isChecked()):
-			self.persoData['keyboard'] = btchip.QWERTZ_KEYMAP 
+			self.persoData['keyboard'] = btchip.QWERTZ_KEYMAP
 		elif (self.ui.azertyButton.isChecked()):
 			self.persoData['keyboard'] = btchip.AZERTY_KEYMAP
 		try:
@@ -206,13 +206,13 @@ class ConfigDialog(QtGui.QDialog):
 			mode = mode | btchip.OPERATION_MODE_SERVER
 		try:
 			self.persoData['client'].setup(mode, btchip.FEATURE_RFC6979, self.persoData['currencyCode'],
-				self.persoData['currencyCodeP2SH'], self.persoData['pin'], None, 
+				self.persoData['currencyCodeP2SH'], self.persoData['pin'], None,
 				self.persoData['keyboard'], self.persoData['seed'])
 		except BTChipException, e:
 			if e.sw == 0x6985:
-				QMessageBox.warning(self, "Error", "Dongle is already set up. Please insert a different one", "OK")				
+				QMessageBox.warning(self, "Error", "Dongle is already set up. Please insert a different one", "OK")
 				return
-		except Exception, e:				
+		except Exception, e:
 				QMessageBox.warning(self, "Error", "Error performing setup", "OK")
 				return
 		if self.persoData['seed'] is None:
@@ -226,13 +226,13 @@ class ConfigDialog(QtGui.QDialog):
 
 	def processCancel(self):
 		self.reject()
-		self.persoData['main'].reject()			
+		self.persoData['main'].reject()
 
 class FinalizeDialog(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalization04finalize.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.FinishButton.clicked.connect(self.finish)
@@ -243,37 +243,37 @@ class FinalizeDialog(QtGui.QDialog):
 			self.reject()
 			self.persoData['main'].reject()
 		attempts = self.persoData['client'].getVerifyPinRemainingAttempts()
-		self.ui.remainingAttemptsLabel.setText("Remaining attempts " + str(attempts))		
+		self.ui.remainingAttemptsLabel.setText("Remaining attempts " + str(attempts))
 
 	def finish(self):
 		if (len(self.ui.pin1.text()) < 4):
 			QMessageBox.warning(self, "Error", "PIN must be at least 4 characteres long", "OK")
-			return					
+			return
 		if (len(self.ui.pin1.text()) > 32):
 			QMessageBox.warning(self, "Error", "PIN is too long", "OK")
-			return	
+			return
 		try:
 			self.persoData['client'].verifyPin(str(self.ui.pin1.text()))
 		except BTChipException, e:
 			if ((e.sw == 0x63c0) or (e.sw == 0x6985)):
-				QMessageBox.warning(self, "Error", "Invalid PIN - dongle has been reset. Please personalize again", "OK")				
+				QMessageBox.warning(self, "Error", "Invalid PIN - dongle has been reset. Please personalize again", "OK")
 				self.reject()
 				self.persoData['main'].reject()
 			if ((e.sw & 0xfff0) == 0x63c0):
 				attempts = e.sw - 0x63c0
-				self.ui.remainingAttemptsLabel.setText("Remaining attempts " + str(attempts))		
-			QMessageBox.warning(self, "Error", "Invalid PIN - please unplug the dongle and plug it again before retrying", "OK")				
+				self.ui.remainingAttemptsLabel.setText("Remaining attempts " + str(attempts))
+			QMessageBox.warning(self, "Error", "Invalid PIN - please unplug the dongle and plug it again before retrying", "OK")
 			try:
 				while not waitDongle(self, self.persoData):
 					pass
 			except Exception, e:
 				self.reject()
 				self.persoData['main'].reject()
-			return			
-		except Exception, e:				
-			QMessageBox.warning(self, "Error", "Unexpected error verifying PIN  - aborting", "OK")			
+			return
+		except Exception, e:
+			QMessageBox.warning(self, "Error", "Unexpected error verifying PIN  - aborting", "OK")
 			self.reject()
-			self.persoData['main'].reject()			
+			self.persoData['main'].reject()
 			return
 		if not self.persoData['hardened']:
 			try:
@@ -284,19 +284,19 @@ class FinalizeDialog(QtGui.QDialog):
 				self.persoData['main'].reject()
 				return
 		QMessageBox.information(self, "BTChip Setup", "Setup completed. Please unplug the dongle and plug it again before use", "OK")
-		self.accept()	
+		self.accept()
 		self.persoData['main'].accept()
 
 class SeedBackupStart(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalizationseedbackup01.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.NextButton.clicked.connect(self.processNext)
-	
-	def processNext(self):		
+
+	def processNext(self):
 		dialog = SeedBackupUnplug(self.persoData, self)
 		self.hide()
 		dialog.exec_()
@@ -305,12 +305,12 @@ class SeedBackupUnplug(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalizationseedbackup02.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.NextButton.clicked.connect(self.processNext)
-	
-	def processNext(self):		
+
+	def processNext(self):
 		dialog = SeedBackupInstructions(self.persoData, self)
 		self.hide()
 		dialog.exec_()
@@ -319,12 +319,12 @@ class SeedBackupInstructions(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalizationseedbackup03.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.NextButton.clicked.connect(self.processNext)
-	
-	def processNext(self):		
+
+	def processNext(self):
 		dialog = SeedBackupVerify(self.persoData, self)
 		self.hide()
 		dialog.exec_()
@@ -333,13 +333,13 @@ class SeedBackupVerify(QtGui.QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
-		self.persoData = persoData		
+		self.persoData = persoData
 		self.ui = ui.personalizationseedbackup04.Ui_Dialog()
 		self.ui.setupUi(self)
 		self.ui.seedOkButton.clicked.connect(self.seedOK)
 		self.ui.seedKoButton.clicked.connect(self.seedKO)
-	
-	def seedOK(self):		
+
+	def seedOK(self):
 		dialog = FinalizeDialog(self.persoData, self)
 		self.hide()
 		dialog.exec_()
@@ -356,11 +356,11 @@ class SeedBackupVerify(QtGui.QDialog):
 				self.persoData['client'].verifyPin("0")
 			except BTChipException, e:
 				if e.sw == 0x63c0:
-					QMessageBox.information(self, "BTChip Setup", "Dongle is reset and can be repersonalized", "OK")				
+					QMessageBox.information(self, "BTChip Setup", "Dongle is reset and can be repersonalized", "OK")
 					finished = True
 					pass
 				if e.sw == 0x6faa:
-					QMessageBox.information(self, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")									
+					QMessageBox.information(self, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")
 					pass
 			except Exception, e:
 				pass
