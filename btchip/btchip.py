@@ -110,15 +110,24 @@ class btchip:
 		self.dongle.exchange(bytearray(apdu))
 		# Each input
 		for trinput in transaction.inputs:
-			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 			params = bytearray(trinput.prevOut)
 			writeVarint(len(trinput.script), params)
-			# TODO : in the unlikely case the script is longer, cut here
 			params.extend(trinput.script)
 			params.extend(trinput.sequence)
-			apdu.append(len(params))
-			apdu.extend(params)
-			self.dongle.exchange(bytearray(apdu))
+			offset = 0
+
+			while (offset < len(params)):
+				blockLength = 255
+				if ((offset + blockLength) < len(params)):
+					dataLength = blockLength
+				else:
+					dataLength = len(params) - offset
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, \
+				0x80, 0x00, dataLength ]
+				apdu.extend(params[offset : offset + dataLength])
+				response = self.dongle.exchange(bytearray(apdu))
+				offset += dataLength
+
 		# Number of outputs
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 		params = []
