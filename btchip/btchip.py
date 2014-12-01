@@ -113,12 +113,23 @@ class btchip:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 			params = bytearray(trinput.prevOut)
 			writeVarint(len(trinput.script), params)
-			# TODO : in the unlikely case the script is longer, cut here
-			params.extend(trinput.script)
-			params.extend(trinput.sequence)
 			apdu.append(len(params))
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
+			offset = 0
+			while (offset < len(trinput.script)):
+				blockLength = 251
+				if ((offset + blockLength) < len(trinput.script)):
+					dataLength = blockLength
+				else:
+					dataLength = len(trinput.script) - offset
+				params = trinput.script[offset : offset + dataLength]
+				if ((offset + dataLength) == len(trinput.script)):
+					params.extend(trinput.sequence)
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, len(params) ]
+				apdu.extend(params)
+				self.dongle.exchange(bytearray(apdu))
+				offset += dataLength
 		# Number of outputs
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 		params = []
@@ -131,11 +142,20 @@ class btchip:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 			params = bytearray(troutput.amount)
 			writeVarint(len(troutput.script), params)
-			# TODO : in the unlikely case the script is longer, cut here
-			params.extend(troutput.script)
 			apdu.append(len(params))
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
+			offset = 0
+			while (offset < len(troutput.script)):
+				blockLength = 255
+				if ((offset + blockLength) < len(troutput.script)):
+					dataLength = blockLength
+				else:
+					dataLength = len(troutput.script) - offset
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, dataLength ]
+				apdu.extend(troutput.script[offset : offset + dataLength])
+				self.dongle.exchange(bytearray(apdu))
+				offset += dataLength
 		# Locktime
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, len(transaction.lockTime) ]
 		apdu.extend(transaction.lockTime)
@@ -162,16 +182,31 @@ class btchip:
 				params.append(0x01)
 			else:
 				params.append(0x00)
-			params.append(len(passedOutput['value']))
+			if passedOutput['trustedInput']:
+				params.append(len(passedOutput['value']))
 			params.extend(passedOutput['value'])
 			if currentIndex <> inputIndex:
 				script = bytearray()
 			writeVarint(len(script), params)
-			params.extend(script)
-			params.extend(bytearray([0xFF, 0xFF, 0xFF, 0xFF])) # default sequence
+			if len(script) == 0:
+				params.extend(bytearray([0xFF, 0xFF, 0xFF, 0xFF])) # default sequence
 			apdu.append(len(params))
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
+			offset = 0
+			while(offset < len(script)):
+				blockLength = 255
+				if ((offset + blockLength) < len(script)):
+					dataLength = blockLength
+				else:
+					dataLength = len(script) - offset
+				params = script[offset : offset + dataLength]
+				if ((offset + dataLength) == len(script)):
+					params.extend(bytearray([0xFF, 0xFF, 0xFF, 0xFF])) # default sequence
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00, len(params) ]
+				apdu.extend(params)
+				self.dongle.exchange(bytearray(apdu))
+				offset += blockLength
 			currentIndex += 1
 
 	def finalizeInput(self, outputAddress, amount, fees, changePath):
