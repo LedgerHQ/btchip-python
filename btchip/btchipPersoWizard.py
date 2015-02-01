@@ -45,6 +45,8 @@ import ui.personalizationseedbackup02
 import ui.personalizationseedbackup03
 import ui.personalizationseedbackup04
 
+BTCHIP_DEBUG = False
+
 def waitDongle(currentDialog, persoData):
 	try:
 		if persoData['client'] <> None:
@@ -52,7 +54,7 @@ def waitDongle(currentDialog, persoData):
 				persoData['client'].dongle.close()
 			except:
 				pass
-		dongle = getDongle(True)
+		dongle = getDongle(BTCHIP_DEBUG)
 		persoData['client'] = btchip(dongle)
 		persoData['client'].getFirmwareVersion()['version'].split(".")
 		return True

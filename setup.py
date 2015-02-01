@@ -7,7 +7,7 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='btchip-python',
-    version='0.1.11',
+    version='0.1.12',
     author='BTChip',
     author_email='contact@btchip.com',
     description='Python library to communicate with BTChip dongle',
