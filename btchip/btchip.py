@@ -351,7 +351,8 @@ class btchip:
 			else:
 				raise
 		result['compressedKeys'] = (response[0] == 0x01)
-		result['version'] = "%d.%d.%d" % (((response[1] << 8) + response[2]), response[3], response[4])
+		result['version'] = "%d.%d.%d" % (response[2], response[3], response[4])
+		result['specialVersion'] = response[1]
 		return result
 
 	def getRandom(self, size):

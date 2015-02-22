@@ -59,6 +59,7 @@ class HIDDongle(Dongle, DongleWait):
 		self.ledger = ledger
 		self.debug = debug
 		self.waitImpl = self
+		self.opened = True
 		try:
 			self.device.detach_kernel_driver(0)
 		except:
@@ -119,14 +120,16 @@ class HIDDongle(Dongle, DongleWait):
 		return bytearray(self.device.read(0x82, 64, timeout))
 
 	def close(self):
-		try:
-			self.device.attach_kernel_driver(0)
-		except:
-			pass
-		try:
-			self.device.reset()
-		except:
-			pass
+		if self.opened:
+			try:
+				self.device.attach_kernel_driver(0)
+			except:
+				pass
+			try:
+				self.device.reset()
+			except:
+				pass
+		self.opened = False
 
 class WinUSBDongle(Dongle, DongleWait):
 
@@ -134,6 +137,7 @@ class WinUSBDongle(Dongle, DongleWait):
 		self.device = device
 		self.debug = debug
 		self.waitImpl = self
+		self.opened = True
 
 	def exchange(self, apdu, timeout=20000):
 		if self.debug:
@@ -158,10 +162,12 @@ class WinUSBDongle(Dongle, DongleWait):
 		return bytearray(self.device.read(0x82, 260, timeout=timeout))
 
 	def close(self):
-		try:
-			self.device.reset()
-		except:
-			pass
+		if self.opened:
+			try:
+				self.device.reset()
+			except:
+				pass
+		self.opened = False
 
 class HIDDongleHIDAPI(Dongle, DongleWait):
 
@@ -170,6 +176,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		self.ledger = ledger		
 		self.debug = debug
 		self.waitImpl = self
+		self.opened = True
 
 	def exchange(self, apdu, timeout=20000):
 		if self.debug:
@@ -241,10 +248,12 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		return bytearray(data)
 
 	def close(self):
-		try:
-			self.device.close()
-		except:
-			pass
+		if self.opened:
+			try:
+				self.device.close()
+			except:
+				pass
+		self.opened = False
 
 def getDongle(debug=False):
 	dev = None
@@ -269,10 +278,10 @@ def getDongle(debug=False):
 	if WINUSB:
 		dev = usb.core.find(idVendor=0x2581, idProduct=0x1b7c) # core application, WinUSB
 		if dev is not None:
-			return WinUSBDongle(dev, ledger, debug)
+			return WinUSBDongle(dev, debug)
 		dev = usb.core.find(idVendor=0x2581, idProduct=0x1808) # bootloader, WinUSB
 		if dev is not None:
-			return WinUSBDongle(dev, ledger, debug)
+			return WinUSBDongle(dev, debug)
 		dev = usb.core.find(idVendor=0x2581, idProduct=0x2b7c) # core application, Generic HID
 		if dev is not None:
 			return HIDDongle(dev, ledger, debug)
