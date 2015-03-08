@@ -316,6 +316,13 @@ class btchip:
 		result['trustedInputKey'] = response[0:16]
 		result['developerKey'] = response[16:]
 		self.setKeymapEncoding(keymapEncoding)
+		try:
+			self.setTypingBehaviour(0xff, 0xff, 0xff, 0x10)	
+                except BTChipException as e:
+                        if (e.sw == 0x6700): # Old firmware version, command not supported
+                                pass
+                        else:
+                                raise
 		return result
 
 	def setKeymapEncoding(self, keymapEncoding):
@@ -324,6 +331,16 @@ class btchip:
 		apdu.extend(keymapEncoding)
 		self.dongle.exchange(bytearray(apdu))
 
+	def setTypingBehaviour(self, unitDelayStart, delayStart, unitDelayKey, delayKey):
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_KEYMAP, 0x01, 0x00 ]
+		params = []
+		writeUint32BE(unitDelayStart, params)
+		writeUint32BE(delayStart, params)
+		writeUint32BE(unitDelayKey, params)
+		writeUint32BE(delayKey, params)
+		apdu.append(len(params))
+		apdu.extend(params)
+		self.dongle.exchange(bytearray(apdu))
 
 	def getOperationMode(self):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_OPERATION_MODE, 0x00, 0x00, 0x00]
