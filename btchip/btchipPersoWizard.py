@@ -28,7 +28,6 @@ try:
 except:
 	MNEMONIC = False
 
-from usb.core import USBError
 from btchipComm import getDongle, DongleWait
 from btchip import btchip
 from btchipUtils import compress_public_key,format_transaction, get_regular_input_script
