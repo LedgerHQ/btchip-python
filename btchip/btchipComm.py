@@ -25,11 +25,12 @@ import hid
 import time
 
 try:
-	import usb.core # using PyUSB
-	WINUSB = True
+	from smartcard.Exceptions import NoCardException
+	from smartcard.System import readers
+	from smartcard.util import toHexString, toBytes
+	SCARD = True
 except ImportError:
-	WINUSB = False
-
+	SCARD = False
 
 class DongleWait(object):
 	__metaclass__ = ABCMeta
@@ -51,123 +52,6 @@ class Dongle(object):
 
 	def setWaitImpl(self, waitImpl):
 		self.waitImpl = waitImpl
-
-class HIDDongle(Dongle, DongleWait):
-
-	def __init__(self, device, ledger=False, debug=False):
-		self.device = device
-		self.ledger = ledger
-		self.debug = debug
-		self.waitImpl = self
-		self.opened = True
-		try:
-			self.device.detach_kernel_driver(0)
-		except:
-			pass
-
-	def exchange(self, apdu, timeout=20000):
-		if self.debug:
-			print "=> %s" % hexlify(apdu)
-		if self.ledger:
-			apdu = wrapCommandAPDU(0x0101, apdu, 64)
-		padSize = len(apdu) % 64
-		tmp = apdu
-		if padSize <> 0:
-			tmp.extend([0] * (64 - padSize))
-		offset = 0
-		while(offset <> len(tmp)):
-			self.device.write(0x02, tmp[offset:offset + 64], 0)
-			offset += 64
-		dataLength = 0
-		dataStart = 2
-		result = self.waitImpl.waitFirstResponse(timeout)
-		if not self.ledger:
-			if result[0] == 0x61: # 61xx : data available
-				dataLength = result[1]
-				dataLength += 2
-				if dataLength > 62:
-					remaining = dataLength - 62
-					while(remaining != 0):
-						if remaining > 64:
-							blockLength = 64
-						else:
-							blockLength = remaining
-						result.extend(bytearray(self.device.read(0x82, 64, timeout))[0:blockLength])
-						remaining -= blockLength
-				swOffset = dataLength
-				dataLength -= 2
-			else:
-				swOffset = 0
-		else:
-			while True:
-				response = unwrapResponseAPDU(0x0101, result, 64)
-				if response is not None:
-					result = response
-					dataStart = 0
-					swOffset = len(response) - 2
-					dataLength = len(response) - 2
-					break
-				result.extend(bytearray(self.device.read(0x82, 64, timeout)))
-		sw = (result[swOffset] << 8) + result[swOffset + 1]
-		response = result[dataStart : dataLength + dataStart]
-		if self.debug:
-			print "<= %s%.2x" % (hexlify(response), sw)
-		if sw <> 0x9000:
-			raise BTChipException("Invalid status %04x" % sw, sw)
-		return response
-
-	def waitFirstResponse(self, timeout):
-		return bytearray(self.device.read(0x82, 64, timeout))
-
-	def close(self):
-		if self.opened:
-			try:
-				self.device.attach_kernel_driver(0)
-			except:
-				pass
-			try:
-				self.device.reset()
-			except:
-				pass
-		self.opened = False
-
-class WinUSBDongle(Dongle, DongleWait):
-
-	def __init__(self, device, debug=False):
-		self.device = device
-		self.debug = debug
-		self.waitImpl = self
-		self.opened = True
-
-	def exchange(self, apdu, timeout=20000):
-		if self.debug:
-			print "=> %s" % hexlify(apdu)
-		self.device.write(0x02, apdu, 0)
-		result = self.waitImpl.waitFirstResponse(timeout)
-		dataLength = 0
-		if result[0] == 0x61: # 61xx : data available
-			dataLength = result[1]
-			swOffset = dataLength + 2
-		else:
-			swOffset = 0
-		sw = (result[swOffset] << 8) + result[swOffset + 1]
-		response = result[2 : dataLength + 2]
-		if self.debug:
-			print "<= %s%.2x" % (hexlify(response), sw)
-		if sw <> 0x9000:
-			raise BTChipException("Invalid status %04x" % sw, sw)
-		return response
-
-	def waitFirstResponse(self, timeout):
-		return bytearray(self.device.read(0x82, 260, timeout=timeout))
-
-	def close(self):
-		if self.opened:
-			try:
-				self.device.reset()
-			except:
-				pass
-		self.opened = False
 
 class HIDDongleHIDAPI(Dongle, DongleWait):
 
@@ -255,6 +139,33 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 				pass
 		self.opened = False
 
+class DongleSmartcard(Dongle):
+
+	def __init__(self, device, debug=False):
+		self.device = device
+		self.debug = debug
+		self.waitImpl = self
+		self.opened = True
+
+	def exchange(self, apdu, timeout=20000):
+		if self.debug:
+			print "=> %s" % hexlify(apdu)
+		response, sw1, sw2 = self.device.transmit(toBytes(hexlify(apdu)))
+		sw = (sw1 << 8) | sw2
+		if self.debug:
+			print "<= %s%.2x" % (toHexString(response).replace(" ", ""), sw)
+		if sw <> 0x9000:
+			raise BTChipException("Invalid status %04x" % sw, sw)
+		return bytearray(response)
+
+	def close(self):
+		if self.opened:
+			try:
+				self.device.disconnect()
+			except:
+				pass
+		self.opened = False
+
 def getDongle(debug=False):
 	dev = None
 	hidDevicePath = None
@@ -275,25 +186,23 @@ def getDongle(debug=False):
 		dev.open_path(hidDevicePath)
 		dev.set_nonblocking(True)
 		return HIDDongleHIDAPI(dev, ledger, debug)
-	if WINUSB:
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x1b7c) # core application, WinUSB
-		if dev is not None:
-			return WinUSBDongle(dev, debug)
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x1808) # bootloader, WinUSB
-		if dev is not None:
-			return WinUSBDongle(dev, debug)
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x2b7c) # core application, Generic HID
-		if dev is not None:
-			return HIDDongle(dev, ledger, debug)
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x3b7c) # core application, Generic HID, Ledger
-		if dev is not None:
-			ledger = True
-			return HIDDongle(dev, ledger, debug)			
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x4b7c) # Proton
-		if dev is not None:
-			ledger = True
-			return HIDDongle(dev, ledger, debug)
-		dev = usb.core.find(idVendor=0x2581, idProduct=0x1807) # bootloader, Generic HID
-		if dev is not None:
-			return HIDDongle(dev, ledger, debug)
+	if SCARD:
+		connection = None
+		for reader in readers():
+			try:
+				connection = reader.createConnection()
+				connection.connect()				
+				response, sw1, sw2 = connection.transmit(toBytes("00A4040010FF4C4547522E57414C5430312E493031"))																  
+				sw = (sw1 << 8) | sw2
+				if sw == 0x9000:
+					break
+				else:
+					connection.disconnect()
+					connection = None
+			except:
+				connection = None
+				pass
+		if connection is not None:
+			return DongleSmartcard(connection, debug)
 	raise BTChipException("No dongle found")
+

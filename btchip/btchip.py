@@ -26,6 +26,7 @@ from btchipHelpers import *
 class btchip:
 	BTCHIP_CLA = 0xe0
 
+	BTCHIP_INS_SET_ALTERNATE_COIN_VERSION = 0x14
 	BTCHIP_INS_SETUP = 0x20
 	BTCHIP_INS_VERIFY_PIN = 0x22
 	BTCHIP_INS_GET_OPERATION_MODE = 0x24
@@ -68,6 +69,10 @@ class btchip:
 
 	def __init__(self, dongle):
 		self.dongle = dongle
+
+	def setAlternateCoinVersion(self, versionRegular, versionP2SH):
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_ALTERNATE_COIN_VERSION, 0x00, 0x00, 0x02, versionRegular, versionP2SH]
+		self.dongle.exchange(bytearray(apdu))
 
 	def verifyPin(self, pin):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x00, 0x00, len(pin) ]
@@ -222,7 +227,7 @@ class btchip:
 		response = apdu.append(len(params))
 		apdu.extend(params)
 		response = self.dongle.exchange(bytearray(apdu))
-		result['confirmationNeeded'] = response[1 + response[0]] == 0x01
+		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
 		result['outputData'] = response[1 : 1 + response[0]]
 		return result
 
