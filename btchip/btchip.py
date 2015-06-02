@@ -22,9 +22,11 @@ from bitcoinTransaction import *
 from bitcoinVarint import *
 from btchipException import *
 from btchipHelpers import *
+from btchipKeyRecovery import *
 
 class btchip:
 	BTCHIP_CLA = 0xe0
+	BTCHIP_JC_EXT_CLA = 0xf0
 
 	BTCHIP_INS_SET_ALTERNATE_COIN_VERSION = 0x14
 	BTCHIP_INS_SETUP = 0x20
@@ -53,6 +55,11 @@ class btchip:
 	BTCHIP_INS_COMPOSE_MOFN_ADDRESS = 0xc6
 	BTCHIP_INS_GET_POS_SEED = 0xca
 
+	BTCHIP_INS_EXT_GET_HALF_PUBLIC_KEY = 0x20
+	BTCHIP_INS_EXT_CACHE_PUT_PUBLIC_KEY = 0x22
+	BTCHIP_INS_EXT_CACHE_HAS_PUBLIC_KEY = 0x24
+	BTCHIP_INS_EXT_CACHE_GET_FEATURES = 0x26
+
 	OPERATION_MODE_WALLET = 0x01
 	OPERATION_MODE_RELAXED_WALLET = 0x02
 	OPERATION_MODE_SERVER = 0x04
@@ -69,6 +76,12 @@ class btchip:
 
 	def __init__(self, dongle):
 		self.dongle = dongle
+		self.needKeyCache = False
+		try:
+			result = self.getJCExtendedFeatures()
+			self.needKeyCache = (result['proprietaryApi'] == False)
+		except:
+			pass
 
 	def setAlternateCoinVersion(self, versionRegular, versionP2SH):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_ALTERNATE_COIN_VERSION, 0x00, 0x00, 0x02, versionRegular, versionP2SH]
@@ -92,6 +105,8 @@ class btchip:
 	def getWalletPublicKey(self, path):
 		result = {}
 		donglePath = parse_bip32_path(path)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)			
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x00, 0x00, len(donglePath) ]
 		apdu.extend(donglePath)
 		response = self.dongle.exchange(bytearray(apdu))
@@ -216,6 +231,8 @@ class btchip:
 
 	def finalizeInput(self, outputAddress, amount, fees, changePath):
 		donglePath = parse_bip32_path(changePath)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)		
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]
 		params = []
@@ -252,6 +269,8 @@ class btchip:
 
 	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
 		donglePath = parse_bip32_path(path)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)		
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_SIGN, 0x00, 0x00 ]
 		params = []
 		params.extend(donglePath)
@@ -267,6 +286,8 @@ class btchip:
 
 	def signMessagePrepare(self, path, message):
 		donglePath = parse_bip32_path(path)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)		
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGN_MESSAGE, 0x00, 0x00 ]
 		params = []
@@ -421,6 +442,8 @@ class btchip:
 
 	def deriveBip32Key(self, encodedPrivateKey, path):
 		donglePath = parse_bip32_path(path)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)		
 		offset = 1
 		currentEncodedPrivateKey = encodedPrivateKey
 		while (offset < len(donglePath)):
@@ -442,3 +465,71 @@ class btchip:
 		apdu.extend(data)
 		return self.dongle.exchange(bytearray(apdu))
 
+# Functions dedicated to the Java Card interface when no proprietary API is available
+
+	def parse_bip32_path_internal(self, path):
+		if len(path) == 0:
+			return []
+		result = []
+		elements = path.split('/')
+		for pathElement in elements:
+			element = pathElement.split('\'')
+			if len(element) == 1:
+				result.append(int(element[0]))
+			else:
+				result.append(0x80000000 | int(element[0]))
+		return result
+
+	def serialize_bip32_path_internal(self, path):
+		result = []
+		for pathElement in path:
+			writeUint32BE(pathElement, result)
+		return bytearray([ len(path) ] + result)
+
+	def resolvePublicKey(self, path):
+		expandedPath = self.serialize_bip32_path_internal(path)
+		apdu = [ self.BTCHIP_JC_EXT_CLA, self.BTCHIP_INS_EXT_CACHE_HAS_PUBLIC_KEY, 0x00, 0x00 ]
+		apdu.append(len(expandedPath))
+		apdu.extend(expandedPath)
+		result = self.dongle.exchange(bytearray(apdu))
+		if (result[0] == 0):
+			# Not present, need to be inserted into the cache
+			apdu = [ self.BTCHIP_JC_EXT_CLA, self.BTCHIP_INS_EXT_GET_HALF_PUBLIC_KEY, 0x00, 0x00 ]
+			apdu.append(len(expandedPath))
+			apdu.extend(expandedPath)
+			result = self.dongle.exchange(bytearray(apdu))
+			hashData = result[0:32]
+			keyX = result[32:64]
+			signature = result[64:]
+			keyXY = recoverKey(signature, hashData, keyX)
+			apdu = [ self.BTCHIP_JC_EXT_CLA, self.BTCHIP_INS_EXT_CACHE_PUT_PUBLIC_KEY, 0x00, 0x00 ]
+			apdu.append(len(expandedPath) + 65)
+			apdu.extend(expandedPath)
+			apdu.extend(keyXY)
+			self.dongle.exchange(bytearray(apdu))
+
+	def resolvePublicKeysInPath(self, path):
+		splitPath = self.parse_bip32_path_internal(path)
+		# Locate the first public key in path
+		offset = 0
+		startOffset = 0
+		while(offset < len(splitPath)):
+			if (splitPath[offset] < 0x80000000):
+				startOffset = offset
+				break
+			offset = offset + 1
+		if startOffset <> 0:
+			searchPath = splitPath[0:startOffset - 1]
+			offset = startOffset - 1
+			while(offset < len(splitPath)):
+				searchPath = searchPath + [ splitPath[offset] ]
+				self.resolvePublicKey(searchPath)
+				offset = offset + 1
+		self.resolvePublicKey(splitPath)
+
+	def getJCExtendedFeatures(self):
+		result = {}
+		apdu = [ self.BTCHIP_JC_EXT_CLA, self.BTCHIP_INS_EXT_CACHE_GET_FEATURES, 0x00, 0x00, 0x00 ]
+		response = self.dongle.exchange(bytearray(apdu))
+		result['proprietaryApi'] = ((response[0] & 0x01) <> 0)
+		return result
