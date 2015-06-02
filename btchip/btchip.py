@@ -232,7 +232,7 @@ class btchip:
 	def finalizeInput(self, outputAddress, amount, fees, changePath):
 		donglePath = parse_bip32_path(changePath)
 		if self.needKeyCache:
-			self.resolvePublicKeysInPath(path)		
+			self.resolvePublicKeysInPath(changePath)		
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]
 		params = []
