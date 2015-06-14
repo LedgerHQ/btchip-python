@@ -23,6 +23,7 @@ from bitcoinVarint import *
 from btchipException import *
 from btchipHelpers import *
 from btchipKeyRecovery import *
+from binascii import hexlify
 
 class btchip:
 	BTCHIP_CLA = 0xe0
@@ -229,22 +230,52 @@ class btchip:
 				offset += blockLength
 			currentIndex += 1
 
-	def finalizeInput(self, outputAddress, amount, fees, changePath):
+	def finalizeInput(self, outputAddress, amount, fees, changePath, rawTx=None):
+		alternateEncoding = False
 		donglePath = parse_bip32_path(changePath)
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(changePath)		
 		result = {}
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]
-		params = []
-		params.append(len(outputAddress))
-		params.extend(bytearray(outputAddress))
-		writeHexAmountBE(btc_to_satoshi(str(amount)), params)
-		writeHexAmountBE(btc_to_satoshi(str(fees)), params)
-		params.extend(donglePath)
-		response = apdu.append(len(params))
-		apdu.extend(params)
-		response = self.dongle.exchange(bytearray(apdu))
+		if rawTx is not None:
+			try:
+				fullTx = bitcoinTransaction(bytearray(rawTx))
+				outputs = fullTx.serializeOutputs()
+				if len(donglePath) <> 0:
+					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0xFF, 0x00 ]
+					params = []
+					params.extend(donglePath)
+					apdu.append(len(params))
+					apdu.extend(params)
+					response = self.dongle.exchange(bytearray(apdu))
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0x80, 0x00 ]
+				params = []
+				params.extend(outputs)
+				apdu.append(len(params))
+				apdu.extend(params)
+				response = self.dongle.exchange(bytearray(apdu))
+				alternateEncoding = True
+			except:
+				pass
+		if not alternateEncoding:
+			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]
+			params = []
+			params.append(len(outputAddress))
+			params.extend(bytearray(outputAddress))
+			writeHexAmountBE(btc_to_satoshi(str(amount)), params)
+			writeHexAmountBE(btc_to_satoshi(str(fees)), params)
+			params.extend(donglePath)
+			apdu.append(len(params))
+			apdu.extend(params)
+			response = self.dongle.exchange(bytearray(apdu))
 		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+		result['confirmationType'] = response[1 + response[0]]
+		if result['confirmationType'] == 0x02:
+			result['keycardData'] = response[1 + response[0] + 1:]
+		if result['confirmationType'] == 0x03:
+			offset = 1 + response[0]
+			result['keycardData'] = response[offset + 1 : offset + 1 + response[offset]]
+			offset = offset + 1
+			result['secureScreenData'] = response[offset:]
 		result['outputData'] = response[1 : 1 + response[0]]
 		return result
 
@@ -264,7 +295,12 @@ class btchip:
 			apdu.extend(outputData[offset : offset + dataLength])
 			response = self.dongle.exchange(bytearray(apdu))
 			offset += dataLength
-		result['confirmationNeeded'] = response[0] == 0x01
+		result['confirmationNeeded'] = response[0] <> 0x00
+		result['confirmationType'] = response[0]
+		if result['confirmationType'] == 0x02:
+			result['keycardData'] = response[1:]
+		if result['confirmationType'] == 0x03:
+			result['secureScreenData'] = response[1:]
 		return result
 
 	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
@@ -297,7 +333,12 @@ class btchip:
 		apdu.append(len(params))
 		apdu.extend(params)
 		response = self.dongle.exchange(bytearray(apdu))
-		result['confirmationNeeded'] = response[0] == 0x01
+		result['confirmationNeeded'] = response[0] <> 0x00
+		result['confirmationType'] = response[0]
+                if result['confirmationType'] == 0x02:
+                        result['keycardData'] = response[1:]
+                if result['confirmationType'] == 0x03:
+                        result['secureScreenData'] = response[1:]
 		return result
 
 	def signMessageSign(self, pin=""):

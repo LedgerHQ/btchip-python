@@ -122,6 +122,13 @@ class bitcoinTransaction:
 			result.extend(self.lockTime)
 		return result
 
+	def serializeOutputs(self):
+		result = []
+		writeVarint(len(self.outputs), result)
+		for troutput in self.outputs:
+			result.extend(troutput.serialize())
+		return result
+
 	def __str__(self):
 		buf =  "Version : " + hexlify(self.version) + "\r\n"
 		index = 1
