@@ -74,8 +74,7 @@ class HIDDongleHIDAPI(Dongle, DongleWait):
 		offset = 0
 		while(offset <> len(tmp)):
 			data = tmp[offset:offset + 64]
-			if data[0] == 0:
-				data = bytearray([0]) + data
+			data = bytearray([0]) + data
 			self.device.write(data)
 			offset += 64
 		dataLength = 0
