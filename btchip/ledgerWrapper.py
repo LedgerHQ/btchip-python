@@ -19,7 +19,6 @@
 
 import struct
 from btchipException import BTChipException
-from binascii import hexlify
 
 def wrapCommandAPDU(channel, command, packetSize):
 	if packetSize < 3:
