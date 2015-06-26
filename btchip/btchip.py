@@ -272,9 +272,11 @@ class btchip:
 		if result['confirmationType'] == 0x02:
 			result['keycardData'] = response[1 + response[0] + 1:]
 		if result['confirmationType'] == 0x03:
-			offset = 1 + response[0]
-			result['keycardData'] = response[offset + 1 : offset + 1 + response[offset]]
+			offset = 1 + response[0] + 1 
+			keycardDataLength = response[offset]
 			offset = offset + 1
+			result['keycardData'] = response[offset : offset + keycardDataLength]
+			offset = offset + keycardDataLength
 			result['secureScreenData'] = response[offset:]
 		result['outputData'] = response[1 : 1 + response[0]]
 		return result
@@ -282,6 +284,7 @@ class btchip:
 	def finalizeInputFull(self, outputData):
 		result = {}
 		offset = 0
+		encryptedOutputData = ""
 		while (offset < len(outputData)):
 			blockLength = 255
 			if ((offset + blockLength) < len(outputData)):
@@ -294,13 +297,22 @@ class btchip:
 			p1, 0x00, dataLength ]
 			apdu.extend(outputData[offset : offset + dataLength])
 			response = self.dongle.exchange(bytearray(apdu))
+			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
 			offset += dataLength
-		result['confirmationNeeded'] = response[0] <> 0x00
-		result['confirmationType'] = response[0]
-		if result['confirmationType'] == 0x02:
-			result['keycardData'] = response[1:]
-		if result['confirmationType'] == 0x03:
-			result['secureScreenData'] = response[1:]
+                result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+                result['confirmationType'] = response[1 + response[0]]
+                if result['confirmationType'] == 0x02:
+			offset = 1 + response[0] + 1
+			keycardDataLength = response[offset]
+                        result['keycardData'] = response[offset : offset + keycardDataLength]
+                if result['confirmationType'] == 0x03:
+                        offset = 1 + response[0] + 1
+                        keycardDataLength = response[offset]
+                        offset = offset + 1
+                        result['keycardData'] = response[offset : offset + keycardDataLength]
+                        offset = offset + keycardDataLength
+                        result['secureScreenData'] = response[offset:]
+                result['encryptedOutputData'] = encryptedOutputData 
 		return result
 
 	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
