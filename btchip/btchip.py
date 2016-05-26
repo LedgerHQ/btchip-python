@@ -62,7 +62,7 @@ class btchip:
 	BTCHIP_INS_EXT_CACHE_GET_FEATURES = 0x26
 
 	OPERATION_MODE_WALLET = 0x01
-	OPERATION_MODE_RELAXED_WALLET = 0x02
+	OPERATION_MODE_RELAXED_WALLET = 0x02 
 	OPERATION_MODE_SERVER = 0x04
 	OPERATION_MODE_DEVELOPER = 0x08
 
@@ -159,6 +159,7 @@ class btchip:
 		apdu.extend(params)
 		self.dongle.exchange(bytearray(apdu))
 		# Each output
+		indexOutput = 0
 		for troutput in transaction.outputs:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 			params = bytearray(troutput.amount)
@@ -187,7 +188,20 @@ class btchip:
 
 	def startUntrustedTransaction(self, newTransaction, inputIndex, outputList, redeemScript):
 		# Start building a fake transaction with the passed inputs
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x00, (0x00 if newTransaction else 0x80) ]
+		segwit = False
+		if newTransaction:
+			for passedOutput in outputList:
+				if ('witness' in passedOutput) and passedOutput['witness']:
+					segwit = True
+					break
+		if newTransaction:
+			if segwit:
+				p2 = 0x02
+			else:
+				p2 = 0x00
+		else:
+				p2 = 0x80
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x00, p2 ]
 		params = bytearray([0x01, 0x00, 0x00, 0x00]) # default version
 		writeVarint(len(outputList), params)
 		apdu.append(len(params))
@@ -199,11 +213,13 @@ class btchip:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00 ]
 			params = []
 			script = redeemScript
-			if passedOutput['trustedInput']:
+			if ('witness' in passedOutput) and passedOutput['witness']:
+				params.append(0x02)
+			elif ('trustedInput' in passedOutput) and passedOutput['trustedInput']:
 				params.append(0x01)
 			else:
 				params.append(0x00)
-			if passedOutput['trustedInput']:
+			if ('trustedInput' in passedOutput) and passedOutput['trustedInput']:
 				params.append(len(passedOutput['value']))
 			params.extend(passedOutput['value'])
 			if currentIndex <> inputIndex:
@@ -236,6 +252,7 @@ class btchip:
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(changePath)		
 		result = {}
+		outputs = None
 		if rawTx is not None:
 			try:
 				fullTx = bitcoinTransaction(bytearray(rawTx))
@@ -278,7 +295,14 @@ class btchip:
 			result['keycardData'] = response[offset : offset + keycardDataLength]
 			offset = offset + keycardDataLength
 			result['secureScreenData'] = response[offset:]
-		result['outputData'] = response[1 : 1 + response[0]]
+		if result['confirmationType'] == 0x04:
+			offset = 1 + response[0] + 1
+			keycardDataLength = response[offset]
+			result['keycardData'] = response[offset + 1 : offset + 1 + keycardDataLength]			
+		if outputs == None:
+			result['outputData'] = response[1 : 1 + response[0]]
+		else:
+			result['outputData'] = outputs
 		return result
 
 	def finalizeInputFull(self, outputData):
@@ -299,20 +323,22 @@ class btchip:
 			response = self.dongle.exchange(bytearray(apdu))
 			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
 			offset += dataLength
-                result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
-                result['confirmationType'] = response[1 + response[0]]
-                if result['confirmationType'] == 0x02:
+		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+		result['confirmationType'] = response[1 + response[0]]
+		if result['confirmationType'] == 0x02:
+			result['keycardData'] = response[1 + response[0] + 1:] # legacy
+		if result['confirmationType'] == 0x03:
 			offset = 1 + response[0] + 1
 			keycardDataLength = response[offset]
-                        result['keycardData'] = response[offset : offset + keycardDataLength]
-                if result['confirmationType'] == 0x03:
-                        offset = 1 + response[0] + 1
-                        keycardDataLength = response[offset]
-                        offset = offset + 1
-                        result['keycardData'] = response[offset : offset + keycardDataLength]
-                        offset = offset + keycardDataLength
-                        result['secureScreenData'] = response[offset:]
-                result['encryptedOutputData'] = encryptedOutputData 
+			offset = offset + 1
+			result['keycardData'] = response[offset : offset + keycardDataLength]
+			offset = offset + keycardDataLength
+			result['secureScreenData'] = response[offset:]
+			result['encryptedOutputData'] = encryptedOutputData 
+		if result['confirmationType'] == 0x04:
+			offset = 1 + response[0] + 1
+			keycardDataLength = response[offset]
+			result['keycardData'] = response[offset + 1 : offset + 1 + keycardDataLength]						
 		return result
 
 	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
@@ -433,6 +459,14 @@ class btchip:
 			and operationMode <> btchip.OPERATION_MODE_DEVELOPER:
 			raise BTChipException("Invalid operation mode")
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_OPERATION_MODE, 0x00, 0x00, 0x01, operationMode ]
+		self.dongle.exchange(bytearray(apdu))
+
+	def enableAlternate2fa(self, persistent):
+		if persistent:
+			p1 = 0x02
+		else:
+			p1 = 0x01
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_OPERATION_MODE, p1, 0x00, 0x01, btchip.OPERATION_MODE_WALLET ]
 		self.dongle.exchange(bytearray(apdu))
 
 	def getFirmwareVersion(self):
