@@ -178,6 +178,9 @@ def getDongle(debug=False):
 		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x4b7c:
 			hidDevicePath = hidDevice['path']
 			ledger = True
+		if hidDevice['vendor_id'] == 0x2c97 and hidDevice['product_id'] == 0x0000:
+			hidDevicePath = hidDevice['path']
+			ledger = True
 		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x1807:
 			hidDevicePath = hidDevice['path']
 	if hidDevicePath is not None:
