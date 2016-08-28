@@ -7,11 +7,12 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='btchip-python',
-    version='0.1.17',
+    version='0.1.18',
     author='BTChip',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Nano dongle',
     long_description=open(join(here, 'README.md')).read(),
+    url='https://github.com/LedgerHQ/btchip-python',
     packages=find_packages(),
     install_requires=['hidapi>=0.7.99'],
     extras_require = {
@@ -22,7 +23,7 @@ setup(
     classifiers=[
 	'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
-        'Operating System :: POSIX :: Windows',
+        'Operating System :: Microsoft :: Windows',
 	'Operating System :: MacOS :: MacOS X'
     ]
 )
