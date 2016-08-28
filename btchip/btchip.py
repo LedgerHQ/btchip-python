@@ -323,8 +323,13 @@ class btchip:
 			response = self.dongle.exchange(bytearray(apdu))
 			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
 			offset += dataLength
-		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
-		result['confirmationType'] = response[1 + response[0]]
+		if len(response) > 1: 
+			result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+			result['confirmationType'] = response[1 + response[0]]
+		else:
+			# Support for old style API before 1.0.2
+			result['confirmationNeeded'] = response[0] <> 0x00
+			result['confirmationType'] = response[0]
 		if result['confirmationType'] == 0x02:
 			result['keycardData'] = response[1 + response[0] + 1:] # legacy
 		if result['confirmationType'] == 0x03:
@@ -358,7 +363,7 @@ class btchip:
 		result[0] = 0x30
 		return result
 
-	def signMessagePrepare(self, path, message):
+	def signMessagePrepareV1(self, path, message):
 		donglePath = parse_bip32_path(path)
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(path)		
@@ -373,10 +378,57 @@ class btchip:
 		response = self.dongle.exchange(bytearray(apdu))
 		result['confirmationNeeded'] = response[0] <> 0x00
 		result['confirmationType'] = response[0]
-                if result['confirmationType'] == 0x02:
-                        result['keycardData'] = response[1:]
-                if result['confirmationType'] == 0x03:
-                        result['secureScreenData'] = response[1:]
+		if result['confirmationType'] == 0x02:
+			result['keycardData'] = response[1:]
+		if result['confirmationType'] == 0x03:
+			result['secureScreenData'] = response[1:]
+		return result
+
+	def signMessagePrepareV2(self, path, message):
+		donglePath = parse_bip32_path(path)
+		if self.needKeyCache:
+			self.resolvePublicKeysInPath(path)				
+		result = {}
+		offset = 0
+		encryptedOutputData = ""
+		while (offset < len(message)):
+			params = [];
+			if offset == 0:
+				params.extend(donglePath)
+				params.append((len(message) >> 8) & 0xff)
+				params.append(len(message) & 0xff)
+				p2 = 0x01
+			else:
+				p2 = 0x80
+			blockLength = 255 - len(params)
+			if ((offset + blockLength) < len(message)):
+				dataLength = blockLength
+			else:
+				dataLength = len(message) - offset
+			params.extend(bytearray(message[offset : offset + dataLength]))
+			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGN_MESSAGE, 0x00, p2 ]
+			apdu.append(len(params))
+			apdu.extend(params)
+			response = self.dongle.exchange(bytearray(apdu))
+			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
+			offset += blockLength
+		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+		result['confirmationType'] = response[1 + response[0]]
+		if result['confirmationType'] == 0x03:
+			offset = 1 + response[0] + 1
+			result['secureScreenData'] = response[offset:]			
+			result['encryptedOutputData'] = encryptedOutputData 
+
+		return result
+
+	def signMessagePrepare(self, path, message):
+		try:
+			result = self.signMessagePrepareV2(path, message)
+		except BTChipException as e:
+			if (e.sw == 0x6b00): # Old firmware version, try older method
+				result = self.signMessagePrepareV1(path, message)
+			else:
+				raise
 		return result
 
 	def signMessageSign(self, pin=""):
@@ -423,11 +475,11 @@ class btchip:
 		self.setKeymapEncoding(keymapEncoding)
 		try:
 			self.setTypingBehaviour(0xff, 0xff, 0xff, 0x10)	
-                except BTChipException as e:
-                        if (e.sw == 0x6700): # Old firmware version, command not supported
-                                pass
-                        else:
-                                raise
+		except BTChipException as e:
+			if (e.sw == 0x6700): # Old firmware version, command not supported
+				pass
+			else:
+				raise
 		return result
 
 	def setKeymapEncoding(self, keymapEncoding):
