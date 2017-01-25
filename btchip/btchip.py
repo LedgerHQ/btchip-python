@@ -79,6 +79,15 @@ class btchip:
 		self.dongle = dongle
 		self.needKeyCache = False
 		try:
+			firmware = self.getFirmwareVersion()['version'].split(".")
+			self.multiOutputSupported = int(firmware[0]) >= 1 and int(firmware[1]) >= 1 and int(firmware[2]) >= 4
+			if self.multiOutputSupported:
+				self.scriptBlockLength = 50
+			else:
+				self.scriptBlockLength = 255
+		except:
+			pass				
+		try:			
 			result = self.getJCExtendedFeatures()
 			self.needKeyCache = (result['proprietaryApi'] == False)
 		except:
@@ -264,12 +273,20 @@ class btchip:
 					apdu.append(len(params))
 					apdu.extend(params)
 					response = self.dongle.exchange(bytearray(apdu))
-				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0x80, 0x00 ]
-				params = []
-				params.extend(outputs)
-				apdu.append(len(params))
-				apdu.extend(params)
-				response = self.dongle.exchange(bytearray(apdu))
+				offset = 0
+				while (offset < len(outputs)):
+					blockLength = self.scriptBlockLength
+					if ((offset + blockLength) < len(outputs)):
+						dataLength = blockLength
+						p1 = 0x00
+					else:
+						dataLength = len(outputs) - offset
+						p1 = 0x80
+					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, \
+						p1, 0x00, dataLength ]
+					apdu.extend(outputs[offset : offset + dataLength])
+					response = self.dongle.exchange(bytearray(apdu))
+					offset += dataLength
 				alternateEncoding = True
 			except:
 				pass
@@ -310,7 +327,7 @@ class btchip:
 		offset = 0
 		encryptedOutputData = ""
 		while (offset < len(outputData)):
-			blockLength = 255
+			blockLength = self.scriptBlockLength
 			if ((offset + blockLength) < len(outputData)):
 				dataLength = blockLength
 				p1 = 0x00

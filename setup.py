@@ -7,7 +7,7 @@ from os.path import dirname, join
 here = dirname(__file__)
 setup(
     name='btchip-python',
-    version='0.1.18',
+    version='0.1.19',
     author='BTChip',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Nano dongle',
