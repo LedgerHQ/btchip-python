@@ -219,6 +219,10 @@ class btchip:
 		# Loop for each input
 		currentIndex = 0
 		for passedOutput in outputList:
+			if ('sequence' in passedOutput) and passedOutput['sequence']:
+				sequence = bytearray(passedOutput['sequence'].decode('hex'))
+			else:
+				sequence = bytearray([0xFF, 0xFF, 0xFF, 0xFF]) # default sequence
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00 ]
 			params = []
 			script = redeemScript
@@ -235,7 +239,7 @@ class btchip:
 				script = bytearray()
 			writeVarint(len(script), params)
 			if len(script) == 0:
-				params.extend(bytearray([0xFF, 0xFF, 0xFF, 0xFF])) # default sequence
+				params.extend(sequence)
 			apdu.append(len(params))
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
@@ -248,7 +252,7 @@ class btchip:
 					dataLength = len(script) - offset
 				params = script[offset : offset + dataLength]
 				if ((offset + dataLength) == len(script)):
-					params.extend(bytearray([0xFF, 0xFF, 0xFF, 0xFF])) # default sequence
+					params.extend(sequence)
 				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00, len(params) ]
 				apdu.extend(params)
 				self.dongle.exchange(bytearray(apdu))
