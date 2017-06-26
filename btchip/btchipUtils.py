@@ -43,7 +43,10 @@ def format_transaction(dongleOutputData, trustedInputsAndInputScripts, version=0
 		newInput = bitcoinInput()
 		newInput.prevOut = item[0][4:4+36]
 		newInput.script = item[1]
-		newInput.sequence = bytearray([0xff, 0xff, 0xff, 0xff])
+                if len(item > 2):
+			newInput.sequence = bytearray(item[2].decode('hex'))
+		else:
+			newInput.sequence = bytearray([0xff, 0xff, 0xff, 0xff])
 		transaction.inputs.append(newInput)
 	result = transaction.serialize(True)
 	result.extend(dongleOutputData)

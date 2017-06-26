@@ -195,7 +195,7 @@ class btchip:
 		result['value'] = response
 		return result
 
-	def startUntrustedTransaction(self, newTransaction, inputIndex, outputList, redeemScript):
+	def startUntrustedTransaction(self, newTransaction, inputIndex, outputList, redeemScript, version=0x01):
 		# Start building a fake transaction with the passed inputs
 		segwit = False
 		if newTransaction:
@@ -211,7 +211,7 @@ class btchip:
 		else:
 				p2 = 0x80
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x00, p2 ]
-		params = bytearray([0x01, 0x00, 0x00, 0x00]) # default version
+		params = bytearray([version, 0x00, 0x00, 0x00])
 		writeVarint(len(outputList), params)
 		apdu.append(len(params))
 		apdu.extend(params)
