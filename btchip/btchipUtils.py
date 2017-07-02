@@ -88,6 +88,13 @@ def get_p2sh_input_script(redeemScript, sigHashtypeList):
 	result.extend(redeemScript)
 	return bytearray(result)
 
+def get_p2pk_input_script(sigHashtype):
+	if len(sigHashtype) >= 0x4c:
+		raise BTChipException("Invalid sigHashtype")
+	result = [ len(sigHashtype) ]
+	result.extend(sigHashtype)
+	return bytearray(result)
+
 def get_output_script(amountScriptArray):
 	result = [ len(amountScriptArray) ]
 	for amountScript in amountScriptArray:
