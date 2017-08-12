@@ -17,13 +17,13 @@
 ********************************************************************************
 """
 
-from btchipComm import *
-from bitcoinTransaction import *
-from bitcoinVarint import *
-from btchipException import *
-from btchipHelpers import *
-from btchipKeyRecovery import *
-from binascii import hexlify
+from .btchipComm import *
+from .bitcoinTransaction import *
+from .bitcoinVarint import *
+from .btchipException import *
+from .btchipHelpers import *
+from .btchipKeyRecovery import *
+from binascii import hexlify, unhexlify
 
 class btchip:
 	BTCHIP_CLA = 0xe0
@@ -71,9 +71,9 @@ class btchip:
 	FEATURE_FREE_SIGHASHTYPE = 0x04
 	FEATURE_NO_2FA_P2SH = 0x08
 
-	QWERTY_KEYMAP = bytearray("000000000000000000000000760f00d4ffffffc7000000782c1e3420212224342627252e362d3738271e1f202122232425263333362e37381f0405060708090a0b0c0d0e0f101112131415161718191a1b1c1d2f3130232d350405060708090a0b0c0d0e0f101112131415161718191a1b1c1d2f313035".decode('hex'))
-	QWERTZ_KEYMAP = bytearray("000000000000000000000000760f00d4ffffffc7000000782c1e3420212224342627252e362d3738271e1f202122232425263333362e37381f0405060708090a0b0c0d0e0f101112131415161718191a1b1d1c2f3130232d350405060708090a0b0c0d0e0f101112131415161718191a1b1d1c2f313035".decode('hex'))
-	AZERTY_KEYMAP = bytearray("08000000010000200100007820c8ffc3feffff07000000002c38202030341e21222d352e102e3637271e1f202122232425263736362e37101f1405060708090a0b0c0d0e0f331112130415161718191d1b1c1a2f64302f2d351405060708090a0b0c0d0e0f331112130415161718191d1b1c1a2f643035".decode('hex'))
+	QWERTY_KEYMAP = bytearray(unhexlify("000000000000000000000000760f00d4ffffffc7000000782c1e3420212224342627252e362d3738271e1f202122232425263333362e37381f0405060708090a0b0c0d0e0f101112131415161718191a1b1c1d2f3130232d350405060708090a0b0c0d0e0f101112131415161718191a1b1c1d2f313035"))
+	QWERTZ_KEYMAP = bytearray(unhexlify("000000000000000000000000760f00d4ffffffc7000000782c1e3420212224342627252e362d3738271e1f202122232425263333362e37381f0405060708090a0b0c0d0e0f101112131415161718191a1b1d1c2f3130232d350405060708090a0b0c0d0e0f101112131415161718191a1b1d1c2f313035"))
+	AZERTY_KEYMAP = bytearray(unhexlify("08000000010000200100007820c8ffc3feffff07000000002c38202030341e21222d352e102e3637271e1f202122232425263736362e37101f1405060708090a0b0c0d0e0f331112130415161718191d1b1c1a2f64302f2d351405060708090a0b0c0d0e0f331112130415161718191d1b1c1a2f643035"))
 
 	def __init__(self, dongle):
 		self.dongle = dongle
@@ -98,6 +98,8 @@ class btchip:
 		self.dongle.exchange(bytearray(apdu))
 
 	def verifyPin(self, pin):
+		if isinstance(pin, str):
+			pin = pin.encode('utf-8')		
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x00, 0x00, len(pin) ]
 		apdu.extend(bytearray(pin))
 		self.dongle.exchange(bytearray(apdu))
@@ -107,7 +109,7 @@ class btchip:
 		apdu.extend(bytearray("0"))
 		try:
 			self.dongle.exchange(bytearray(apdu))
-		except BTChipException, e:
+		except BTChipException as e:
 			if ((e.sw & 0xfff0) == 0x63c0):
 				return e.sw - 0x63c0
 			raise e
@@ -235,7 +237,7 @@ class btchip:
 			if ('trustedInput' in passedOutput) and passedOutput['trustedInput']:
 				params.append(len(passedOutput['value']))
 			params.extend(passedOutput['value'])
-			if currentIndex <> inputIndex:
+			if currentIndex != inputIndex:
 				script = bytearray()
 			writeVarint(len(script), params)
 			if len(script) == 0:
@@ -270,7 +272,7 @@ class btchip:
 			try:
 				fullTx = bitcoinTransaction(bytearray(rawTx))
 				outputs = fullTx.serializeOutputs()
-				if len(donglePath) <> 0:
+				if len(donglePath) != 0:
 					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0xFF, 0x00 ]
 					params = []
 					params.extend(donglePath)
@@ -305,7 +307,7 @@ class btchip:
 			apdu.append(len(params))
 			apdu.extend(params)
 			response = self.dongle.exchange(bytearray(apdu))
-		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+		result['confirmationNeeded'] = response[1 + response[0]] != 0x00
 		result['confirmationType'] = response[1 + response[0]]
 		if result['confirmationType'] == 0x02:
 			result['keycardData'] = response[1 + response[0] + 1:]
@@ -329,7 +331,7 @@ class btchip:
 	def finalizeInputFull(self, outputData):
 		result = {}
 		offset = 0
-		encryptedOutputData = ""
+		encryptedOutputData = b""
 		while (offset < len(outputData)):
 			blockLength = self.scriptBlockLength
 			if ((offset + blockLength) < len(outputData)):
@@ -345,11 +347,11 @@ class btchip:
 			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
 			offset += dataLength
 		if len(response) > 1: 
-			result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+			result['confirmationNeeded'] = response[1 + response[0]] != 0x00
 			result['confirmationType'] = response[1 + response[0]]
 		else:
 			# Support for old style API before 1.0.2
-			result['confirmationNeeded'] = response[0] <> 0x00
+			result['confirmationNeeded'] = response[0] != 0x00
 			result['confirmationType'] = response[0]
 		if result['confirmationType'] == 0x02:
 			result['keycardData'] = response[1 + response[0] + 1:] # legacy
@@ -368,6 +370,8 @@ class btchip:
 		return result
 
 	def untrustedHashSign(self, path, pin="", lockTime=0, sighashType=0x01):
+		if isinstance(pin, str):
+			pin = pin.encode('utf-8')
 		donglePath = parse_bip32_path(path)
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(path)		
@@ -397,7 +401,7 @@ class btchip:
 		apdu.append(len(params))
 		apdu.extend(params)
 		response = self.dongle.exchange(bytearray(apdu))
-		result['confirmationNeeded'] = response[0] <> 0x00
+		result['confirmationNeeded'] = response[0] != 0x00
 		result['confirmationType'] = response[0]
 		if result['confirmationType'] == 0x02:
 			result['keycardData'] = response[1:]
@@ -433,7 +437,7 @@ class btchip:
 			response = self.dongle.exchange(bytearray(apdu))
 			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
 			offset += blockLength
-		result['confirmationNeeded'] = response[1 + response[0]] <> 0x00
+		result['confirmationNeeded'] = response[1 + response[0]] != 0x00
 		result['confirmationType'] = response[1 + response[0]]
 		if result['confirmationType'] == 0x03:
 			offset = 1 + response[0] + 1
@@ -453,6 +457,8 @@ class btchip:
 		return result
 
 	def signMessageSign(self, pin=""):
+		if isinstance(pin, str):
+			pin = pin.encode('utf-8')
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SIGN_MESSAGE, 0x80, 0x00 ]
 		params = []
 		if pin is not None:
@@ -466,12 +472,16 @@ class btchip:
 		return response
 
 	def setup(self, operationModeFlags, featuresFlag, keyVersion, keyVersionP2SH, userPin, wipePin, keymapEncoding, seed=None, developerKey=None):
+		if isinstance(userPin, str):
+			userPin = userPin.encode('utf-8')
 		result = {}
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SETUP, 0x00, 0x00 ]
 		params = [ operationModeFlags, featuresFlag, keyVersion, keyVersionP2SH ]
 		params.append(len(userPin))
 		params.extend(bytearray(userPin))
 		if wipePin is not None:
+			if isinstance(wipePin, str):
+				wipePin = wipePin.encode('utf-8')
 			params.append(len(wipePin))
 			params.extend(bytearray(wipePin))
 		else:
@@ -526,10 +536,10 @@ class btchip:
 		return response[0]
 
 	def setOperationMode(self, operationMode):
-		if operationMode <> btchip.OPERATION_MODE_WALLET \
-			and operationMode <> btchip.OPERATION_MODE_RELAXED_WALLET \
-			and operationMode <> btchip.OPERATION_MODE_SERVER \
-			and operationMode <> btchip.OPERATION_MODE_DEVELOPER:
+		if operationMode != btchip.OPERATION_MODE_WALLET \
+			and operationMode != btchip.OPERATION_MODE_RELAXED_WALLET \
+			and operationMode != btchip.OPERATION_MODE_SERVER \
+			and operationMode != btchip.OPERATION_MODE_DEVELOPER:
 			raise BTChipException("Invalid operation mode")
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_SET_OPERATION_MODE, 0x00, 0x00, 0x01, operationMode ]
 		self.dongle.exchange(bytearray(apdu))
@@ -576,9 +586,9 @@ class btchip:
 
 	def importPrivateKey(self, data, isSeed=False):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_IMPORT_PRIVATE_KEY, (0x02 if isSeed else 0x01), 0x00 ]
-                apdu.append(len(data))
-                apdu.extend(data)
-                return self.dongle.exchange(bytearray(apdu))
+		apdu.append(len(data))
+		apdu.extend(data)
+		return self.dongle.exchange(bytearray(apdu))
 
 	def getPublicKey(self, encodedPrivateKey):
 		result = {}
@@ -587,9 +597,9 @@ class btchip:
 		apdu.append(len(encodedPrivateKey))
 		apdu.extend(encodedPrivateKey)
 		response = self.dongle.exchange(bytearray(apdu))
-                offset = 1
-                result['publicKey'] = response[offset + 1 : offset + 1 + response[offset]]
-                offset = offset + 1 + response[offset]
+		offset = 1
+		result['publicKey'] = response[offset + 1 : offset + 1 + response[offset]]
+		offset = offset + 1 + response[offset]
 		if response[0] == 0x02:
 			result['chainCode'] = response[offset : offset + 32]
 			offset = offset + 32
@@ -678,7 +688,7 @@ class btchip:
 				startOffset = offset
 				break
 			offset = offset + 1
-		if startOffset <> 0:
+		if startOffset != 0:
 			searchPath = splitPath[0:startOffset - 1]
 			offset = startOffset - 1
 			while(offset < len(splitPath)):
@@ -691,5 +701,5 @@ class btchip:
 		result = {}
 		apdu = [ self.BTCHIP_JC_EXT_CLA, self.BTCHIP_INS_EXT_CACHE_GET_FEATURES, 0x00, 0x00, 0x00 ]
 		response = self.dongle.exchange(bytearray(apdu))
-		result['proprietaryApi'] = ((response[0] & 0x01) <> 0)
+		result['proprietaryApi'] = ((response[0] & 0x01) != 0)
 		return result

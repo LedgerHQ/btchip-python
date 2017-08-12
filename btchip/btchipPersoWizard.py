@@ -28,11 +28,11 @@ try:
 except:
 	MNEMONIC = False
 
-from btchipComm import getDongle, DongleWait
-from btchip import btchip
-from btchipUtils import compress_public_key,format_transaction, get_regular_input_script
-from bitcoinTransaction import bitcoinTransaction
-from btchipException import BTChipException
+from .btchipComm import getDongle, DongleWait
+from .btchip import btchip
+from .btchipUtils import compress_public_key,format_transaction, get_regular_input_script
+from .bitcoinTransaction import bitcoinTransaction
+from .btchipException import BTChipException
 
 import ui.personalization00start
 import ui.personalization01seed
@@ -48,7 +48,7 @@ BTCHIP_DEBUG = False
 
 def waitDongle(currentDialog, persoData):
 	try:
-		if persoData['client'] <> None:
+		if persoData['client'] != None:
 			try:
 				persoData['client'].dongle.close()
 			except:
@@ -57,7 +57,7 @@ def waitDongle(currentDialog, persoData):
 		persoData['client'] = btchip(dongle)
 		persoData['client'].getFirmwareVersion()['version'].split(".")
 		return True
-	except BTChipException,e:
+	except BTChipException as e:
 		if e.sw == 0x6faa:
 			QMessageBox.information(currentDialog, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")
 			return False
@@ -65,7 +65,7 @@ def waitDongle(currentDialog, persoData):
 			return False
 		else:
 			raise Exception("Aborted by user")
-	except Exception,e:
+	except Exception as e:
 		if QMessageBox.question(currentDialog, "BTChip setup", "BTChip dongle not found.  It might be in the wrong mode. Try unplugging und plugging it back in again, then press 'OK'", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes:
 			return False
 		else:
@@ -158,7 +158,7 @@ class SecurityDialog(QtGui.QDialog):
 
 
 	def processNext(self):
-		if (self.ui.pin1.text() <> self.ui.pin2.text()):
+		if (self.ui.pin1.text() != self.ui.pin2.text()):
 			self.ui.pin1.setText("")
 			self.ui.pin2.setText("")
 			QMessageBox.warning(self, "Error", "PINs are not matching", "OK")
@@ -199,7 +199,7 @@ class ConfigDialog(QtGui.QDialog):
 		try:
 			while not waitDongle(self, self.persoData):
 				pass
-		except Exception, e:
+		except Exception as e:
 			self.reject()
 			self.persoData['main'].reject()
 		mode = btchip.OPERATION_MODE_WALLET
@@ -209,11 +209,11 @@ class ConfigDialog(QtGui.QDialog):
 			self.persoData['client'].setup(mode, btchip.FEATURE_RFC6979, self.persoData['currencyCode'],
 				self.persoData['currencyCodeP2SH'], self.persoData['pin'], None,
 				self.persoData['keyboard'], self.persoData['seed'])
-		except BTChipException, e:
+		except BTChipException as e:
 			if e.sw == 0x6985:
 				QMessageBox.warning(self, "Error", "Dongle is already set up. Please insert a different one", "OK")
 				return
-		except Exception, e:
+		except Exception as e:
 				QMessageBox.warning(self, "Error", "Error performing setup", "OK")
 				return
 		if self.persoData['seed'] is None:
@@ -240,7 +240,7 @@ class FinalizeDialog(QtGui.QDialog):
 		try:
 			while not waitDongle(self, self.persoData):
 				pass
-		except Exception, e:
+		except Exception as e:
 			self.reject()
 			self.persoData['main'].reject()
 		attempts = self.persoData['client'].getVerifyPinRemainingAttempts()
@@ -255,7 +255,7 @@ class FinalizeDialog(QtGui.QDialog):
 			return
 		try:
 			self.persoData['client'].verifyPin(str(self.ui.pin1.text()))
-		except BTChipException, e:
+		except BTChipException as e:
 			if ((e.sw == 0x63c0) or (e.sw == 0x6985)):
 				QMessageBox.warning(self, "Error", "Invalid PIN - dongle has been reset. Please personalize again", "OK")
 				self.reject()
@@ -267,11 +267,11 @@ class FinalizeDialog(QtGui.QDialog):
 			try:
 				while not waitDongle(self, self.persoData):
 					pass
-			except Exception, e:
+			except Exception as e:
 				self.reject()
 				self.persoData['main'].reject()
 			return
-		except Exception, e:
+		except Exception as e:
 			QMessageBox.warning(self, "Error", "Unexpected error verifying PIN  - aborting", "OK")
 			self.reject()
 			self.persoData['main'].reject()
@@ -351,11 +351,11 @@ class SeedBackupVerify(QtGui.QDialog):
 			try:
 				while not waitDongle(self, self.persoData):
 					pass
-			except Exception, e:
+			except Exception as e:
 				pass
 			try:
 				self.persoData['client'].verifyPin("0")
-			except BTChipException, e:
+			except BTChipException as e:
 				if e.sw == 0x63c0:
 					QMessageBox.information(self, "BTChip Setup", "Dongle is reset and can be repersonalized", "OK")
 					finished = True
@@ -363,7 +363,7 @@ class SeedBackupVerify(QtGui.QDialog):
 				if e.sw == 0x6faa:
 					QMessageBox.information(self, "BTChip Setup", "Please unplug the dongle and plug it again", "OK")
 					pass
-			except Exception, e:
+			except Exception as e:
 				pass
 		self.reject()
 		self.persoData['main'].reject()

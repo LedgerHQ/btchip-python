@@ -17,7 +17,7 @@
 ********************************************************************************
 """
 
-from btchipException import BTChipException
+from .btchipException import BTChipException
 
 def readVarint(buffer, offset):
 	varintSize = 0

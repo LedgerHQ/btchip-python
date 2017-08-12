@@ -22,5 +22,5 @@ import sys
 
 dongle = getDongle(True)
 app = btchip(dongle)
-print app.getFirmwareVersion()['version']
+print(app.getFirmwareVersion()['version'])
 

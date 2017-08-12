@@ -19,9 +19,10 @@
 
 from btchip.btchip import *
 import sys
+import binascii
 
 if len(sys.argv) < 2:
-	print "Usage : %s script to run" % sys.argv[0]
+	print("Usage : %s script to run" % sys.argv[0])
 	sys.exit(2)
 
 dongle = getDongle(True)
@@ -43,7 +44,7 @@ while line:
 		line = line.strip()		
 		if len(line) == 0:
 			continue
-		dongle.exchange(bytearray(line.decode('hex')), timeout)
+		dongle.exchange(bytearray(binascii.unhexlify(line)), timeout)
 	except:
 		if cancelResponse:
 			pass
