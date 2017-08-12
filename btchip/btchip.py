@@ -106,7 +106,7 @@ class btchip:
 
 	def getVerifyPinRemainingAttempts(self):
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_VERIFY_PIN, 0x80, 0x00, 0x01 ]
-		apdu.extend(bytearray("0"))
+		apdu.extend(bytearray(b'0'))
 		try:
 			self.dongle.exchange(bytearray(apdu))
 		except BTChipException as e:
