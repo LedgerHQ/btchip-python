@@ -134,7 +134,7 @@ class btchip:
 		result = {}
 		# Header
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x00, 0x00 ]
-		params = bytearray(("%.8x" % (index)).decode('hex'))
+		params = bytearray.fromhex("%.8x" % (index))
 		params.extend(transaction.version)
 		writeVarint(len(transaction.inputs), params)
 		apdu.append(len(params))
@@ -155,7 +155,7 @@ class btchip:
 					dataLength = blockLength
 				else:
 					dataLength = len(trinput.script) - offset
-				params = trinput.script[offset : offset + dataLength]
+				params = bytearray(trinput.script[offset : offset + dataLength])
 				if ((offset + dataLength) == len(trinput.script)):
 					params.extend(trinput.sequence)
 				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, len(params) ]
@@ -227,7 +227,7 @@ class btchip:
 				sequence = bytearray([0xFF, 0xFF, 0xFF, 0xFF]) # default sequence
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00 ]
 			params = []
-			script = redeemScript
+			script = bytearray(redeemScript)
 			if ('witness' in passedOutput) and passedOutput['witness']:
 				params.append(0x02)
 			elif ('trustedInput' in passedOutput) and passedOutput['trustedInput']:
