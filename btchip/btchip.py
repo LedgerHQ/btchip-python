@@ -222,7 +222,7 @@ class btchip:
 		currentIndex = 0
 		for passedOutput in outputList:
 			if ('sequence' in passedOutput) and passedOutput['sequence']:
-				sequence = bytearray(passedOutput['sequence'].decode('hex'))
+				sequence = bytearray(unhexlify(passedOutput['sequence']))
 			else:
 				sequence = bytearray([0xFF, 0xFF, 0xFF, 0xFF]) # default sequence
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00 ]
