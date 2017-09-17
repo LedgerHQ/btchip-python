@@ -21,8 +21,16 @@ from abc import ABCMeta, abstractmethod
 from .btchipException import *
 from .ledgerWrapper import wrapCommandAPDU, unwrapResponseAPDU
 from binascii import hexlify
-import hid
 import time
+import os
+import struct
+import socket
+
+try:
+	import hid
+	HID = True
+except ImportError:
+	HID = False
 
 try:
 	from smartcard.Exceptions import NoCardException
@@ -165,29 +173,63 @@ class DongleSmartcard(Dongle):
 				pass
 		self.opened = False
 
+class DongleServer(Dongle):
+
+	def __init__(self, server, port, debug=False):
+		self.server = server
+		self.port = port
+		self.debug = debug
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		try:
+			self.socket.connect((self.server, self.port))
+		except:
+			raise BTChipException("Proxy connection failed")
+
+	def exchange(self, apdu, timeout=20000):
+		if self.debug:
+			print("=> %s" % hexlify(apdu))		
+		self.socket.send(struct.pack(">I", len(apdu)))
+		self.socket.send(apdu)
+		size = struct.unpack(">I", self.socket.recv(4))[0]
+		response = self.socket.recv(size)
+		sw = struct.unpack(">H", self.socket.recv(2))[0]
+		if self.debug:
+			print("<= %s%.2x" % (hexlify(response), sw))
+		if sw != 0x9000:
+			raise BTChipException("Invalid status %04x" % sw, sw)
+		return bytearray(response)
+
+	def close(self):
+		try:
+			self.socket.close()
+		except:
+			pass
+
 def getDongle(debug=False):
 	dev = None
 	hidDevicePath = None
-	ledger = False
-	for hidDevice in hid.enumerate(0, 0):
-		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x2b7c:
-			hidDevicePath = hidDevice['path']
-		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x3b7c:
-			hidDevicePath = hidDevice['path']			
-			ledger = True
-		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x4b7c:
-			hidDevicePath = hidDevice['path']
-			ledger = True
-		if hidDevice['vendor_id'] == 0x2c97:
-			hidDevicePath = hidDevice['path']
-			ledger = True
-		if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x1807:
-			hidDevicePath = hidDevice['path']
+	ledger = False	
+	if HID:
+		for hidDevice in hid.enumerate(0, 0):
+			if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x2b7c:
+				hidDevicePath = hidDevice['path']
+			if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x3b7c:
+				hidDevicePath = hidDevice['path']			
+				ledger = True
+			if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x4b7c:
+				hidDevicePath = hidDevice['path']
+				ledger = True
+			if hidDevice['vendor_id'] == 0x2c97:
+				hidDevicePath = hidDevice['path']
+				ledger = True
+			if hidDevice['vendor_id'] == 0x2581 and hidDevice['product_id'] == 0x1807:
+				hidDevicePath = hidDevice['path']
 	if hidDevicePath is not None:
 		dev = hid.device()
 		dev.open_path(hidDevicePath)
 		dev.set_nonblocking(True)
 		return HIDDongleHIDAPI(dev, ledger, debug)
+
 	if SCARD:
 		connection = None
 		for reader in readers():
@@ -206,5 +248,6 @@ def getDongle(debug=False):
 				pass
 		if connection is not None:
 			return DongleSmartcard(connection, debug)
+	if (os.getenv("LEDGER_PROXY_ADDRESS") is not None) and (os.getenv("LEDGER_PROXY_PORT") is not None):
+		return DongleServer(os.getenv("LEDGER_PROXY_ADDRESS"), int(os.getenv("LEDGER_PROXY_PORT")), debug)
 	raise BTChipException("No dongle found")
-
