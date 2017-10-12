@@ -21,4 +21,17 @@ Building on Windows
   - Install Microsoft Visual C++ Compiler for Python 2.7 from http://www.microsoft.com/en-us/download/details.aspx?id=44266
   - Download and install PyQt4 for Python 2.7 from https://www.riverbankcomputing.com/software/pyqt/download 
   - Install the btchip library (open a command prompt and enter c:\python27\scripts\pip install btchip)
+  
+Building/Installing on FreeBSD
+------------------------------
+  
+On FreeBSD you can install the packages:
 
+    pkg install security/py-btchip
+
+or build via ports:
+
+    cd /usr/ports/security/py-btchip
+    make install clean
+
+  
