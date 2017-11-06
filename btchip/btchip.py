@@ -415,7 +415,7 @@ class btchip:
 			self.resolvePublicKeysInPath(path)				
 		result = {}
 		offset = 0
-		encryptedOutputData = ""
+		encryptedOutputData = b""
 		while (offset < len(message)):
 			params = [];
 			if offset == 0:
