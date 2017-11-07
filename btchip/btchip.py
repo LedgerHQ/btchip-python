@@ -149,7 +149,7 @@ class btchip:
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
 			offset = 0
-                        while True:
+			while True:
 				blockLength = 251
 				if ((offset + blockLength) < len(trinput.script)):
 					dataLength = blockLength
@@ -162,8 +162,8 @@ class btchip:
 				apdu.extend(params)
 				self.dongle.exchange(bytearray(apdu))
 				offset += dataLength
-                                if (offset >= len(trinput.script)):
-                                    break
+				if (offset >= len(trinput.script)):
+					break
 		# Number of outputs
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
 		params = []
