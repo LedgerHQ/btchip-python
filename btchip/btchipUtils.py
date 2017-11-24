@@ -50,7 +50,7 @@ def format_transaction(dongleOutputData, trustedInputsAndInputScripts, version=0
 		transaction.inputs.append(newInput)
 	result = transaction.serialize(True)
 	result.extend(dongleOutputData)
-	writeUint32BE(lockTime, result)
+	writeUint32LE(lockTime, result)
 	return bytearray(result)
 
 def get_regular_input_script(sigHashtype, publicKey):
