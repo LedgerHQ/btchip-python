@@ -27,11 +27,11 @@ Building/Installing on FreeBSD
   
 On FreeBSD you can install the packages:
 
-    pkg install security/py-btchip
+    pkg install security/py-btchip-python
 
 or build via ports:
 
-    cd /usr/ports/security/py-btchip
+    cd /usr/ports/security/py-btchip-python
     make install clean
 
   
