@@ -114,12 +114,12 @@ class btchip:
 				return e.sw - 0x63c0
 			raise e
 
-	def getWalletPublicKey(self, path, showOnScreen=False, segwit=False, segwitNative=False):
+	def getWalletPublicKey(self, path, showOnScreen=False, segwit=False, segwitNative=False, cashaddr=False):
 		result = {}
 		donglePath = parse_bip32_path(path)
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(path)			
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x01 if showOnScreen else 0x00, 0x02 if segwitNative else 0x01 if segwit else 0x00, len(donglePath) ]
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x01 if showOnScreen else 0x00, 0x03 if cashaddr else 0x02 if segwitNative else 0x01 if segwit else 0x00, len(donglePath) ]
 		apdu.extend(donglePath)
 		response = self.dongle.exchange(bytearray(apdu))
 		offset = 0
@@ -263,7 +263,7 @@ class btchip:
 				offset += blockLength
 			currentIndex += 1
 
-	def finalizeInput(self, outputAddress, amount, fees, changePath, rawTx=None):
+	def finalizeInput(self, outputAddress, amount, fees, changePath, rawTx=None, cashaddr=False):
 		alternateEncoding = False
 		donglePath = parse_bip32_path(changePath)
 		if self.needKeyCache:
@@ -275,7 +275,7 @@ class btchip:
 				fullTx = bitcoinTransaction(bytearray(rawTx))
 				outputs = fullTx.serializeOutputs()
 				if len(donglePath) != 0:
-					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0xFF, 0x00 ]
+					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, 0xFF, 0x01 if cashaddr else 0x00 ]
 					params = []
 					params.extend(donglePath)
 					apdu.append(len(params))
@@ -291,7 +291,7 @@ class btchip:
 						dataLength = len(outputs) - offset
 						p1 = 0x80
 					apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, \
-						p1, 0x00, dataLength ]
+						p1, 0x01 if cashaddr else 0x00, dataLength ]
 					apdu.extend(outputs[offset : offset + dataLength])
 					response = self.dongle.exchange(bytearray(apdu))
 					offset += dataLength
@@ -330,7 +330,7 @@ class btchip:
 			result['outputData'] = outputs
 		return result
 
-	def finalizeInputFull(self, outputData):
+	def finalizeInputFull(self, outputData, cashaddr=False):
 		result = {}
 		offset = 0
 		encryptedOutputData = b""
@@ -343,7 +343,7 @@ class btchip:
 				dataLength = len(outputData) - offset
 				p1 = 0x80
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE_FULL, \
-			p1, 0x00, dataLength ]
+			p1, 0x01 if cashaddr else 0x00, dataLength ]
 			apdu.extend(outputData[offset : offset + dataLength])
 			response = self.dongle.exchange(bytearray(apdu))
 			encryptedOutputData = encryptedOutputData + response[1 : 1 + response[0]]
