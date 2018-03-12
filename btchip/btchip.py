@@ -79,8 +79,8 @@ class btchip:
 		self.dongle = dongle
 		self.needKeyCache = False
 		try:
-			firmware = self.getFirmwareVersion()['version'].split(".")
-			self.multiOutputSupported = int(firmware[0]) >= 1 and int(firmware[1]) >= 1 and int(firmware[2]) >= 4
+			firmware = self.getFirmwareVersion()['version']
+			self.multiOutputSupported = tuple(map(int, (firmware.split(".")))) >= (1, 1, 4)
 			if self.multiOutputSupported:
 				self.scriptBlockLength = 50
 			else:
