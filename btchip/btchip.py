@@ -114,12 +114,12 @@ class btchip:
 				return e.sw - 0x63c0
 			raise e
 
-	def getWalletPublicKey(self, path, showOnScreen=False, segwit=False, segwitNative=False):
+	def getWalletPublicKey(self, path, showOnScreen=False, segwit=False, segwitNative=False, cashAddr=False):
 		result = {}
 		donglePath = parse_bip32_path(path)
 		if self.needKeyCache:
 			self.resolvePublicKeysInPath(path)			
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x01 if showOnScreen else 0x00, 0x02 if segwitNative else 0x01 if segwit else 0x00, len(donglePath) ]
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_WALLET_PUBLIC_KEY, 0x01 if showOnScreen else 0x00, 0x03 if cashAddr else 0x02 if segwitNative else 0x01 if segwit else 0x00, len(donglePath) ]
 		apdu.extend(donglePath)
 		response = self.dongle.exchange(bytearray(apdu))
 		offset = 0
@@ -199,7 +199,7 @@ class btchip:
 		result['value'] = response
 		return result
 
-	def startUntrustedTransaction(self, newTransaction, inputIndex, outputList, redeemScript, version=0x01):
+	def startUntrustedTransaction(self, newTransaction, inputIndex, outputList, redeemScript, version=0x01, cashAddr=False):
 		# Start building a fake transaction with the passed inputs
 		segwit = False
 		if newTransaction:
@@ -209,7 +209,7 @@ class btchip:
 					break
 		if newTransaction:
 			if segwit:
-				p2 = 0x02
+				p2 = 0x03 if cashAddr else 0x02
 			else:
 				p2 = 0x00
 		else:
