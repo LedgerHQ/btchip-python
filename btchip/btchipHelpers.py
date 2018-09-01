@@ -18,6 +18,7 @@
 """
 
 import decimal
+import re
 
 # from pycoin
 SATOSHI_PER_COIN = decimal.Decimal(1e8)
@@ -77,7 +78,7 @@ def parse_bip32_path(path):
 	if len(elements) > 10:
 		raise BTChipException("Path too long")
 	for pathElement in elements:
-		element = pathElement.split('\'')
+		element = re.split('\'|h|H', pathElement)
 		if len(element) == 1:
 			writeUint32BE(int(element[0]), result)
 		else:
