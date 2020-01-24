@@ -191,10 +191,26 @@ class btchip:
 				apdu.extend(troutput.script[offset : offset + dataLength])
 				self.dongle.exchange(bytearray(apdu))
 				offset += dataLength
-		# Locktime
-		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, len(transaction.lockTime) ]
-		apdu.extend(transaction.lockTime)
+		# Locktime and extras		
+		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00 ]
+		params = bytearray(transaction.lockTime)
+		if len(transaction.extra) != 0:
+			writeVarint(len(transaction.extra), params)
+		apdu.append(len(params))
+		apdu.extend(params)
 		response = self.dongle.exchange(bytearray(apdu))
+		if len(transaction.extra) != 0:
+			offset = 0
+			while (offset < len(transaction.extra)):
+				blockLength = 255
+				if ((offset + blockLength) < len(transaction.extra)):
+					dataLength = blockLength
+				else:
+					dataLength = len(transaction.extra) - offset
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_GET_TRUSTED_INPUT, 0x80, 0x00, dataLength ]
+				apdu.extend(transaction.extra[offset : offset + dataLength])
+				self.dongle.exchange(bytearray(apdu))
+				offset += dataLength
 		result['trustedInput'] = True
 		result['value'] = response
 		return result
