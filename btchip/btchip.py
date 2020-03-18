@@ -215,7 +215,7 @@ class btchip:
 		else:
 				p2 = 0x10 if continueSegwit else 0x80
 		apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x00, p2 ]
-		params = struct.pack('<i', version)
+		params = bytearray(struct.pack('<i', version))
 		writeVarint(len(outputList), params)
 		apdu.append(len(params))
 		apdu.extend(params)
