@@ -6,13 +6,13 @@ from os.path import dirname, join
 
 here = dirname(__file__)
 setup(
-    name='btchip-python',
-    version='0.1.28',
-    author='BTChip',
-    author_email='hello@ledger.fr',
-    description='Python library to communicate with Ledger Nano dongle',
+    name='btchip-python-syscoin',
+    version='0.1.30',
+    author='sidhujag',
+    author_email='sidhujag@gmail.com',
+    description='Python library to communicate with Ledger Nano dongle for Syscoin',
     long_description=open(join(here, 'README.md')).read(),
-    url='https://github.com/LedgerHQ/btchip-python',
+    url='https://github.com/syscoin/btchip-python',
     packages=find_packages(),
     install_requires=['hidapi>=0.7.99'],
     extras_require = {

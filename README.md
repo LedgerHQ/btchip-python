@@ -6,11 +6,11 @@ Python communication library for Ledger Hardware Wallet products
 Requirements
 -------------
 
-This API is available on pip - install with pip install btchip-python 
+This API is available on pip - install with pip install btchip-python-syscoin 
 
 Building on a Unix platform requires libusb-1.0-0-dev and libudev-dev installed previously
 
-Interim Debian packages have also been built by Richard Ulrich at https://launchpad.net/~richi-paraeasy/+archive/ubuntu/bitcoin/ (btchip-python, hidapi and python-hidapi)
+Interim Debian packages have also been built by Richard Ulrich at https://launchpad.net/~richi-paraeasy/+archive/ubuntu/bitcoin/ (btchip-python-syscoin, hidapi and python-hidapi)
 
 For optional BIP 39 support during dongle setup, also install https://github.com/trezor/python-mnemonic - also available as a Debian package at the previous link (python-mnemonic)
 
@@ -27,11 +27,11 @@ Building/Installing on FreeBSD
   
 On FreeBSD you can install the packages:
 
-    pkg install security/py-btchip-python
+    pkg install security/py-btchip-python-syscoin
 
 or build via ports:
 
-    cd /usr/ports/security/py-btchip-python
+    cd /usr/ports/security/py-btchip-python-syscoin
     make install clean
 
   
