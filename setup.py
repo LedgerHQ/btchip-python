@@ -5,9 +5,10 @@ from setuptools import setup, find_packages
 from os.path import dirname, join
 
 here = dirname(__file__)
+import btchip
 setup(
     name='btchip-python',
-    version='0.1.28',
+    version=btchip.__version__,
     author='BTChip',
     author_email='hello@ledger.fr',
     description='Python library to communicate with Ledger Nano dongle',
