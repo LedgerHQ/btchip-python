@@ -242,8 +242,6 @@ class btchip:
 			if currentIndex != inputIndex:
 				script = bytearray()
 			writeVarint(len(script), params)
-			if len(script) == 0:
-				params.extend(sequence)
 			apdu.append(len(params))
 			apdu.extend(params)
 			self.dongle.exchange(bytearray(apdu))
@@ -261,6 +259,10 @@ class btchip:
 				apdu.extend(params)
 				self.dongle.exchange(bytearray(apdu))
 				offset += blockLength
+			if len(script) == 0:
+				apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_START, 0x80, 0x00, len(sequence) ]
+				apdu.extend(sequence)
+				self.dongle.exchange(bytearray(apdu))				
 			currentIndex += 1
 
 	def finalizeInput(self, outputAddress, amount, fees, changePath, rawTx=None):
