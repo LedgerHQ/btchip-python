@@ -85,12 +85,12 @@ class btchip:
 				self.scriptBlockLength = 50
 			else:
 				self.scriptBlockLength = 255
-		except:
+		except Exception:
 			pass				
 		try:			
 			result = self.getJCExtendedFeatures()
 			self.needKeyCache = (result['proprietaryApi'] == False)
-		except:
+		except Exception:
 			pass
 
 	def setAlternateCoinVersion(self, versionRegular, versionP2SH):
@@ -298,7 +298,7 @@ class btchip:
 					response = self.dongle.exchange(bytearray(apdu))
 					offset += dataLength
 				alternateEncoding = True
-			except:
+			except Exception:
 				pass
 		if not alternateEncoding:
 			apdu = [ self.BTCHIP_CLA, self.BTCHIP_INS_HASH_INPUT_FINALIZE, 0x02, 0x00 ]

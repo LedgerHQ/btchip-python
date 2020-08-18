@@ -45,7 +45,7 @@ while line:
 		if len(line) == 0:
 			continue
 		dongle.exchange(bytearray(binascii.unhexlify(line)), timeout)
-	except:
+	except Exception:
 		if cancelResponse:
 			pass
 		else:

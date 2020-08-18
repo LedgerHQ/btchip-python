@@ -138,7 +138,7 @@ dongle = getDongle(True)
 app = btchip(dongle)
 try:
   app.setup(btchip.OPERATION_MODE_RELAXED_WALLET, btchip.FEATURE_RFC6979, 111, 196, "1234", None, btchip.QWERTY_KEYMAP, SEED)
-except:
+except Exception:
   pass
 # Authenticate
 app.verifyPin("1234")
