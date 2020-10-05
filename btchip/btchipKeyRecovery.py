@@ -52,6 +52,6 @@ def recoverKey(signature, hashValue, keyX):
 			candidate = point_to_ser(key.pubkey.point)
 			if candidate[1:33] == keyX:
 				return candidate
-		except:
+		except Exception:
 			pass
 	raise Exception("Key recovery failed")

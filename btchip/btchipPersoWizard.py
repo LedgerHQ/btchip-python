@@ -25,7 +25,7 @@ from PyQt4.QtGui import QDialog, QMessageBox
 try:
 	from mnemonic import Mnemonic
 	MNEMONIC = True
-except:
+except Exception:
 	MNEMONIC = False
 
 from .btchipComm import getDongle, DongleWait
@@ -51,7 +51,7 @@ def waitDongle(currentDialog, persoData):
 		if persoData['client'] != None:
 			try:
 				persoData['client'].dongle.close()
-			except:
+			except Exception:
 				pass
 		dongle = getDongle(BTCHIP_DEBUG)
 		persoData['client'] = btchip(dongle)
@@ -124,7 +124,7 @@ class SeedDialog(QtGui.QDialog):
 				seedText = seedText[0:-1]
 			try:
 				self.persoData['seed'] = seedText.decode('hex')
-			except:
+			except Exception:
 				pass
 			if self.persoData['seed'] == None:
 				if not MNEMONIC:
@@ -279,7 +279,7 @@ class FinalizeDialog(QtGui.QDialog):
 		if not self.persoData['hardened']:
 			try:
 				self.persoData['client'].setOperationMode(btchip.OPERATION_MODE_SERVER)
-			except:
+			except Exception:
 				QMessageBox.warning(self, "Error", "Error switching to non hardened mode", "OK")
 				self.reject()
 				self.persoData['main'].reject()
