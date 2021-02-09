@@ -15,9 +15,9 @@ setup(
     long_description=open(join(here, 'README.md')).read(),
     url='https://github.com/LedgerHQ/btchip-python',
     packages=find_packages(),
-    install_requires=['hidapi>=0.7.99'],
+    install_requires=['hidapi>=0.7.99', 'ecdsa>=0.9'],
     extras_require = {
-	'smartcard': [ 'python-pyscard>=1.6.12-4build1', 'ecdsa>=0.9' ]
+	'smartcard': [ 'python-pyscard>=1.6.12-4build1' ]
     },
     include_package_data=True,
     zip_safe=False,
