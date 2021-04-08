@@ -19,8 +19,8 @@
 
 import sys
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QDialog, QMessageBox
 
 try:
 	from mnemonic import Mnemonic
@@ -72,7 +72,7 @@ def waitDongle(currentDialog, persoData):
 			raise Exception("Aborted by user")
 
 
-class StartBTChipPersoDialog(QtGui.QDialog):
+class StartBTChipPersoDialog(QDialog):
 
 	def __init__(self):
 		QDialog.__init__(self, None)
@@ -94,7 +94,7 @@ class StartBTChipPersoDialog(QtGui.QDialog):
 	def processCancel(self):
 		self.reject()
 
-class SeedDialog(QtGui.QDialog):
+class SeedDialog(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -146,7 +146,7 @@ class SeedDialog(QtGui.QDialog):
 		self.reject()
 		self.persoData['main'].reject()
 
-class SecurityDialog(QtGui.QDialog):
+class SecurityDialog(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -179,7 +179,7 @@ class SecurityDialog(QtGui.QDialog):
 		self.reject()
 		self.persoData['main'].reject()
 
-class ConfigDialog(QtGui.QDialog):
+class ConfigDialog(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -229,7 +229,7 @@ class ConfigDialog(QtGui.QDialog):
 		self.reject()
 		self.persoData['main'].reject()
 
-class FinalizeDialog(QtGui.QDialog):
+class FinalizeDialog(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -288,7 +288,7 @@ class FinalizeDialog(QtGui.QDialog):
 		self.accept()
 		self.persoData['main'].accept()
 
-class SeedBackupStart(QtGui.QDialog):
+class SeedBackupStart(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -302,7 +302,7 @@ class SeedBackupStart(QtGui.QDialog):
 		self.hide()
 		dialog.exec_()
 
-class SeedBackupUnplug(QtGui.QDialog):
+class SeedBackupUnplug(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -316,7 +316,7 @@ class SeedBackupUnplug(QtGui.QDialog):
 		self.hide()
 		dialog.exec_()
 
-class SeedBackupInstructions(QtGui.QDialog):
+class SeedBackupInstructions(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -330,7 +330,7 @@ class SeedBackupInstructions(QtGui.QDialog):
 		self.hide()
 		dialog.exec_()
 
-class SeedBackupVerify(QtGui.QDialog):
+class SeedBackupVerify(QDialog):
 
 	def __init__(self, persoData, parent = None):
 		QDialog.__init__(self, parent)
@@ -370,7 +370,7 @@ class SeedBackupVerify(QtGui.QDialog):
 
 if __name__ == "__main__":
 
-	app = QtGui.QApplication(sys.argv)
+	app = QtWidgets.QApplication(sys.argv)
 	dialog = StartBTChipPersoDialog()
 	dialog.show()
 	app.exec_()
